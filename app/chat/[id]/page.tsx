@@ -1,153 +1,67 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { useParams } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export default function Chat() {
-  const [messages, setMessages] = useState<any[]>([])
-  const [input, setInput] = useState('')
-  const [imagePrompt, setImagePrompt] = useState('')
-  const [character, setCharacter] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
-  const [imageLoading, setImageLoading] = useState(false)
-  const params = useParams()
-  const id = params.id as string
-  const bottomRef = useRef<HTMLDivElement>(null)
+export default function Chats() {
+  const [chats, setChats] = useState<any[]>([])
 
   useEffect(() => {
     async function load() {
-      const { data: char } = await supabase.from('characters').select('*').eq('id', id).single()
-      setCharacter(char)
-      if (char) setImagePrompt(`${char.name}, ${char.description || ''}`)
-      const { data: msgs } = await supabase
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const { data } = await supabase
         .from('messages')
-        .select('*')
-        .eq('character_id', id)
-        .order('created_at', { ascending: true })
-      if (msgs) setMessages(msgs)
+        .select('character_id, characters(name, image_url, description)')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+      if (data) {
+        const unique: any[] = []
+        const seen = new Set()
+        for (const m of data) {
+          if (m.character_id && !seen.has(m.character_id)) {
+            seen.add(m.character_id)
+            unique.push(m)
+          }
+        }
+        setChats(unique)
+      }
     }
-    if (id) load()
-  }, [id])
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  async function send() {
-    if (!input.trim() || loading) return
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return alert('Please log in')
-
-    const userContent = input
-    setInput('')
-    setLoading(true)
-
-    const userMsg = { character_id: id, user_id: session.user.id, content: userContent, role: 'user' }
-    await supabase.from('messages').insert(userMsg)
-    setMessages(prev => [...prev, { ...userMsg, id: Date.now() }])
-
-    const history = messages.slice(-8).map(m => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: m.content
-    }))
-
-    const systemPrompt = `You are ${character?.name || 'a character'}. Description: ${character?.description || ''}. Personality: ${character?.personality || ''}. Stay fully in character. Be immersive and natural.`
-
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
-          messages: [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: userContent }],
-          temperature: 0.9
-        })
-      })
-      const data = await res.json()
-      const replyText = data.choices?.[0]?.message?.content || '...'
-      const reply = { character_id: id, user_id: session.user.id, content: replyText, role: 'assistant' }
-      await supabase.from('messages').insert(reply)
-      setMessages(prev => [...prev, { ...reply, id: Date.now() + 1 }])
-    } catch {
-      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', content: 'Something went wrong.' }])
-    }
-    setLoading(false)
-  }
-
-  async function generateImage() {
-    if (imageLoading || !imagePrompt.trim()) return
-    setImageLoading(true)
-    const encoded = encodeURIComponent(imagePrompt + ', highly detailed, cinematic')
-    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=768&nologo=true&enhance=true`
-
-    setMessages(prev => [...prev, { id: Date.now(), role: 'image', content: imageUrl }])
-    setImageLoading(false)
-  }
+    load()
+  }, [])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#09090D', color: '#F2EDF5' }}>
-      <div style={{ padding: '1rem', borderBottom: '1px solid #2a2a35', textAlign: 'center', fontWeight: 600 }}>
-        {character?.name || 'Chat'}
-      </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
-        {messages.map(msg => (
-          <div key={msg.id} style={{ margin: '0.6rem 0' }}>
-            {msg.role === 'image' ? (
-              <img src={msg.content} alt="Generated" style={{ maxWidth: '100%', borderRadius: '16px' }} />
-            ) : (
-              <div style={{
-                padding: '0.8rem 1.1rem',
-                borderRadius: '20px',
-                maxWidth: '82%',
-                background: msg.role === 'user' ? 'linear-gradient(135deg, #9E092B, #c41e3a)' : '#151219',
-                marginLeft: msg.role === 'user' ? 'auto' : '0',
-                border: msg.role === 'assistant' ? '1px solid #333' : 'none'
-              }}>
-                {msg.content}
+    <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
+      <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center', fontSize: '1.8rem' }}>Chats</h1>
+      {chats.length === 0 && <p style={{ textAlign: 'center', opacity: 0.6 }}>No chats yet. Start talking to a character!</p>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1rem' }}>
+        {chats.map((chat: any) => (
+          <a key={chat.character_id} href={`/chat/${chat.character_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: '#151219', padding: '0.7rem', borderRadius: '14px', border: '1px solid #2a2a35' }}>
+              {chat.characters?.image_url && (
+                <img src={chat.characters.image_url} alt="" style={{ width: '56px', height: '56px', borderRadius: '12px', objectFit: 'cover' }} />
+              )}
+              <div>
+                <div style={{ fontWeight: 600 }}>{chat.characters?.name}</div>
+                <div style={{ fontSize: '0.75rem', opacity: 0.65 }}>{chat.characters?.description?.slice(0, 40)}...</div>
               </div>
-            )}
-          </div>
+            </div>
+          </a>
         ))}
-        {(loading || imageLoading) && <div style={{ opacity: 0.6, fontStyle: 'italic' }}>{imageLoading ? 'Creating image...' : 'Typing...'}</div>}
-        <div ref={bottomRef} />
       </div>
 
-      <div style={{ padding: '0.8rem 1rem', borderTop: '1px solid #2a2a35' }}>
-        <input
-          value={imagePrompt}
-          onChange={e => setImagePrompt(e.target.value)}
-          placeholder="Image prompt (edit for NSFW, etc.)"
-          style={{ width: '100%', padding: '0.6rem 0.8rem', marginBottom: '0.5rem', borderRadius: '12px', border: '1px solid #333', background: '#151219', color: '#F2EDF5', fontSize: '0.85rem' }}
-        />
-        <button
-          onClick={generateImage}
-          disabled={imageLoading}
-          style={{ width: '100%', padding: '0.6rem', marginBottom: '0.6rem', borderRadius: '16px', background: '#4B176D', color: '#fff', border: 'none' }}
-        >
-          ✨ Generate Image
-        </button>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && send()}
-            placeholder="Message..."
-            style={{ flex: 1, padding: '0.8rem 1rem', borderRadius: '24px', border: '1px solid #333', background: '#151219', color: '#F2EDF5' }}
-          />
-          <button onClick={send} disabled={loading} style={{ padding: '0.8rem 1.3rem', borderRadius: '24px', background: '#9E092B', color: '#fff', border: 'none', fontWeight: 600 }}>
-            Send
-          </button>
-        </div>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
+        <a href="/" style={nav}>🏠<br/>Home</a>
+        <a href="/create" style={nav}>✨<br/>Create</a>
+        <a href="/chats" style={{ ...nav, color: '#A855F7' }}>💬<br/>Chats</a>
+        <a href="/profile" style={nav}>👤<br/>Profile</a>
       </div>
     </div>
   )
 }
+
+const nav = { color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' as const }
