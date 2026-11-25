@@ -40,7 +40,7 @@ export default function Chats() {
   }
 
   return (
-    <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
+    <div style={{ minHeight: '100vh', color: '#F2EDF5', padding: '1rem', paddingBottom: '90px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', margin: 0 }}>Chats</h1>
         <a href="/favorites" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.9rem' }}>★ Favorites</a>
@@ -48,7 +48,7 @@ export default function Chats() {
       {chats.length === 0 && <p style={{ opacity: 0.6, marginTop: '1rem' }}>No chats yet.</p>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1rem' }}>
         {chats.map((chat: any) => (
-          <div key={chat.chat_id || chat.character_id} style={{ background: '#151219', padding: '0.7rem', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <div key={chat.chat_id || chat.character_id} style={{ background: 'rgba(21, 18, 25, 0.55)', backdropFilter: 'blur(6px)', padding: '0.7rem', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '0.8rem', border: '1px solid rgba(168,85,247,0.2)' }}>
             {chat.characters?.image_url && <img src={chat.characters.image_url} alt="" style={{ width: '56px', height: '56px', borderRadius: '12px', objectFit: 'cover' }} />}
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 600 }}>{chat.characters?.name}</div>
