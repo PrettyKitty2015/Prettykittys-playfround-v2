@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,6 +15,7 @@ export default function Chat() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const params = useParams()
+  const router = useRouter()
   const id = params.id as string
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -58,7 +59,7 @@ export default function Chat() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
+          model: 'llama-3.3-70b-versatile',
           messages: [
             { role: 'system', content: `You are ${character?.name || 'a character'}. ${character?.personality || ''} ${character?.description || ''} ${character?.scenario || ''}` },
             ...messages.map(m => ({ role: m.role, content: m.content })),
@@ -69,7 +70,7 @@ export default function Chat() {
 
       if (!res.ok) {
         const errText = await res.text()
-        setError(`API Error: ${res.status} - ${errText.slice(0, 100)}`)
+        setError(`API Error: ${res.status} - ${errText.slice(0, 120)}`)
         setLoading(false)
         return
       }
@@ -89,15 +90,11 @@ export default function Chat() {
 
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', display: 'flex', flexDirection: 'column', paddingBottom: '70px' }}>
-      {character && (
-        <div style={{ padding: '1rem', borderBottom: '1px solid #2a2a35', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-          {character.image_url && <img src={character.image_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover' }} />}
-          <div>
-            <div style={{ fontWeight: 600, fontFamily: "'Cinzel Decorative', serif" }}>{character.name}</div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{character.description?.slice(0, 60)}...</div>
-          </div>
-        </div>
-      )}
+      <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid #2a2a35', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.2rem', cursor: 'pointer' }}>←</button>
+        {character?.image_url && <img src={character.image_url} alt="" style={{ width: '42px', height: '42px', borderRadius: '10px', objectFit: 'cover' }} />}
+        <div style={{ fontWeight: 600, fontFamily: "'Cinzel Decorative', serif" }}>{character?.name || 'Chat'}</div>
+      </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
         {messages.map((m, i) => (
