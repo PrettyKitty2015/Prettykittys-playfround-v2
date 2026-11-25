@@ -17,6 +17,7 @@ export default function Profile() {
   const [avatar, setAvatar] = useState('')
   const [stories, setStories] = useState<any[]>([])
   const [message, setMessage] = useState('')
+  const [editing, setEditing] = useState(false)
   const router = useRouter()
 
   async function load() {
@@ -53,7 +54,10 @@ export default function Profile() {
       avatar_url: avatar
     })
     if (error) setMessage(error.message)
-    else setMessage('Saved!')
+    else {
+      setMessage('Saved!')
+      setEditing(false)
+    }
   }
 
   async function uploadImage(e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') {
@@ -81,23 +85,30 @@ export default function Profile() {
       </div>
 
       <div style={{ padding: '2.8rem 1rem 1rem' }}>
-        <h2 style={{ margin: 0, color: accent }}>{username || 'Your Name'}</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: 0, color: accent }}>{username || 'Your Name'}</h2>
+          <button onClick={() => setEditing(!editing)} style={{ background: accent, color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem' }}>
+            {editing ? 'Cancel' : 'Edit Profile'}
+          </button>
+        </div>
         <p style={{ opacity: 0.7, margin: '0.3rem 0 1rem', fontSize: '0.9rem' }}>{bio || 'No bio yet'}</p>
 
-        <div style={{ background: 'rgba(21,18,25,0.55)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '1rem', marginBottom: '1.5rem' }}>
-          <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)}
-            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-          <textarea placeholder="Bio" value={bio} onChange={e => setBio(e.target.value)}
-            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '60px' }} />
-          <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Accent Color</label>
-          <input type="color" value={accent} onChange={e => setAccent(e.target.value)} style={{ width: '100%', height: '40px', margin: '0.3rem 0', border: 'none', borderRadius: '0.5rem' }} />
-          <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Profile Picture</label>
-          <input type="file" accept="image/*" onChange={e => uploadImage(e, 'avatar')} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
-          <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Banner</label>
-          <input type="file" accept="image/*" onChange={e => uploadImage(e, 'banner')} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
-          <button onClick={save} style={{ width: '100%', padding: '0.7rem', background: accent, color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>Save Profile</button>
-          {message && <p style={{ marginTop: '0.5rem', color: accent }}>{message}</p>}
-        </div>
+        {editing && (
+          <div style={{ background: 'rgba(21,18,25,0.55)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '1rem', marginBottom: '1.5rem' }}>
+            <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)}
+              style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
+            <textarea placeholder="Bio" value={bio} onChange={e => setBio(e.target.value)}
+              style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '60px' }} />
+            <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Accent Color</label>
+            <input type="color" value={accent} onChange={e => setAccent(e.target.value)} style={{ width: '100%', height: '40px', margin: '0.3rem 0', border: 'none', borderRadius: '0.5rem' }} />
+            <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Profile Picture</label>
+            <input type="file" accept="image/*" onChange={e => uploadImage(e, 'avatar')} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
+            <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Banner</label>
+            <input type="file" accept="image/*" onChange={e => uploadImage(e, 'banner')} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
+            <button onClick={save} style={{ width: '100%', padding: '0.7rem', background: accent, color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>Save Profile</button>
+            {message && <p style={{ marginTop: '0.5rem', color: accent }}>{message}</p>}
+          </div>
+        )}
 
         <h3 style={{ color: accent, margin: '0 0 0.8rem' }}>My Characters ({stories.length})</h3>
         {stories.length === 0 && <p style={{ opacity: 0.6 }}>No characters yet.</p>}
