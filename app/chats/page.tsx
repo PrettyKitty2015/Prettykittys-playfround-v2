@@ -15,7 +15,7 @@ export default function Chats() {
     if (!session) return
     const { data } = await supabase
       .from('messages')
-      .select('chat_id, character_id, characters(name, image_url, description)')
+      .select('chat_id, character_id, characters(name, image_url)')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
     if (data) {
@@ -23,7 +23,7 @@ export default function Chats() {
       const seen = new Set()
       for (const m of data) {
         const key = m.chat_id || m.character_id
-        if (!seen.has(key)) {
+        if (key && !seen.has(key)) {
           seen.add(key)
           unique.push(m)
         }
@@ -43,9 +43,12 @@ export default function Chats() {
 
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
-      <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B' }}>Chats</h1>
-      {chats.length === 0 && <p style={{ opacity: 0.6 }}>No chats yet.</p>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', margin: 0 }}>Chats</h1>
+        <a href="/favorites" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.9rem' }}>★ Favorites</a>
+      </div>
+      {chats.length === 0 && <p style={{ opacity: 0.6, marginTop: '1rem' }}>No chats yet.</p>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1rem' }}>
         {chats.map((chat: any) => (
           <div key={chat.chat_id || chat.character_id} style={{ background: '#151219', padding: '0.7rem', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
             {chat.characters?.image_url && <img src={chat.characters.image_url} alt="" style={{ width: '56px', height: '56px', borderRadius: '12px', objectFit: 'cover' }} />}
