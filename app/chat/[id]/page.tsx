@@ -81,7 +81,10 @@ export default function Chat() {
       })
 
       const data = await res.json()
-      const imageUrl = data.data?.[0]?.url
+      let imageUrl = data.data?.[0]?.url
+      if (!imageUrl && data.data?.[0]?.b64_json) {
+        imageUrl = `data:image/png;base64,${data.data[0].b64_json}`
+      }
       if (imageUrl) {
         const imgMsg = { role: 'assistant', content: `![image](${imageUrl})`, character_id: id }
         setMessages(prev => [...prev, imgMsg])
