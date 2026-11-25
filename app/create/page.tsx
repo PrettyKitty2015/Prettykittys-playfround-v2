@@ -1,7 +1,8 @@
 'use client'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
+import Cropper from 'react-easy-crop'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,29 +13,69 @@ export default function CreateCharacter() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [personality, setPersonality] = useState('')
-  const [image, setImage] = useState<File | null>(null)
+  const [imageSrc, setImageSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
   const [message, setMessage] = useState('')
   const router = useRouter()
 
+  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels)
+  }, [])
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files.length > 0) {
+      const reader = new FileReader()
+      reader.addEventListener('load', () => setImageSrc(reader.result as string))
+      reader.readAsDataURL(e.target.files[0])
+    }
+  }
+
+  async function getCroppedImg() {
+    if (!imageSrc || !croppedAreaPixels) return null
+    const image = new Image()
+    image.src = imageSrc
+    await new Promise(resolve => image.onload = resolve)
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+
+    canvas.width = croppedAreaPixels.width
+    canvas.height = croppedAreaPixels.height
+
+    ctx.drawImage(
+      image,
+      croppedAreaPixels.x,
+      croppedAreaPixels.y,
+      croppedAreaPixels.width,
+      croppedAreaPixels.height,
+      0,
+      0,
+      croppedAreaPixels.width,
+      croppedAreaPixels.height
+    )
+
+    return new Promise<Blob | null>(resolve => {
+      canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.9)
+    })
+  }
+
   async function saveCharacter() {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      setMessage('Please log in first')
-      return
-    }
+    if (!user) return setMessage('Please log in first')
 
     let imageUrl = null
+    const croppedBlob = await getCroppedImg()
 
-    if (image) {
-      const fileName = `${user.id}-${Date.now()}-${image.name}`
+    if (croppedBlob) {
+      const fileName = `${user.id}-${Date.now()}.jpg`
       const { error: uploadError } = await supabase.storage
         .from('character-images')
-        .upload(fileName, image)
+        .upload(fileName, croppedBlob)
 
-      if (uploadError) {
-        setMessage(uploadError.message)
-        return
-      }
+      if (uploadError) return setMessage(uploadError.message)
 
       const { data } = supabase.storage.from('character-images').getPublicUrl(fileName)
       imageUrl = data.publicUrl
@@ -61,22 +102,31 @@ export default function CreateCharacter() {
       <input placeholder="Character Name" value={name} onChange={e => setName(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
       <textarea placeholder="Description" value={description} onChange={e => setDescription(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '100px' }} />
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
       <textarea placeholder="Personality" value={personality} onChange={e => setPersonality(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '100px' }} />
-      
-      <label style={{ display: 'block', margin: '1rem 0', color: '#A855F7' }}>
-        Character Image (optional, NSFW allowed)
-        <input type="file" accept="image/*" onChange={e => setImage(e.target.files?.[0] || null)}
-          style={{ display: 'block', marginTop: '0.5rem', color: '#F2EDF5' }} />
-      </label>
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
+
+      <input type="file" accept="image/*" onChange={onFileChange} style={{ margin: '1rem 0', color: '#F2EDF5' }} />
+
+      {imageSrc && (
+        <div style={{ position: 'relative', width: '100%', height: '300px', margin: '1rem 0' }}>
+          <Cropper
+            image={imageSrc}
+            crop={crop}
+            zoom={zoom}
+            aspect={3 / 4}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={onCropComplete}
+          />
+        </div>
+      )}
 
       <button onClick={saveCharacter}
-        style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
+        style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '1rem' }}>
         Save Character
       </button>
       {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
-      <p style={{ marginTop: '1rem' }}><a href="/" style={{ color: '#A855F7' }}>Back to Home</a></p>
     </div>
   )
 }
