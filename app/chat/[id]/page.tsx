@@ -52,14 +52,16 @@ export default function Chat() {
     }
 
     try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://prettykittys-playground.vercel.app',
+          'X-Title': 'NightBite'
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
+          model: 'google/gemma-2-9b-it:free',
           messages: [
             { role: 'system', content: `You are ${character?.name || 'a character'}. Personality: ${character?.personality || ''}. Description: ${character?.description || ''}. Scenario: ${character?.scenario || ''}. Stay in character.` },
             ...messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
