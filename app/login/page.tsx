@@ -40,7 +40,7 @@ export default function Login() {
       <img
         src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0136.png"
         alt="NightBite"
-        style={{ width: '100%', maxWidth: '320px', marginBottom: '2rem' }}
+        style={{ width: '100%', maxWidth: '320px', marginBottom: '1rem', marginTop: '-3rem' }}
       />
 
       <div style={{
