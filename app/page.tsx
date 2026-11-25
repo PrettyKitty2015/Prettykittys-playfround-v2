@@ -47,12 +47,15 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#09090D', color: '#F2EDF5', fontFamily: 'system-ui, sans-serif', paddingBottom: '90px' }}>
-      <div style={{ textAlign: 'center', padding: '1.2rem 1rem 0.5rem' }}>
+      <div style={{ textAlign: 'center', padding: '1.5rem 1rem 0.8rem' }}>
         <img
           src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_4425.jpeg"
-          alt="PrettyKitty’s Playground"
-          style={{ width: '100%', maxWidth: '260px', margin: '0 auto' }}
+          alt="NightBite"
+          style={{ width: '100%', maxWidth: '280px', margin: '0 auto' }}
         />
+        <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '1.4rem', background: 'linear-gradient(90deg, #A855F7, #9E092B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: '0.3rem' }}>
+          NightBite
+        </div>
         {profile?.username && (
           <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.4rem' }}>
             {profile.avatar_url && <img src={profile.avatar_url} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', verticalAlign: 'middle', marginRight: '0.3rem' }} />}
@@ -87,7 +90,7 @@ export default function Home() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.8rem' }}>
           {characters.map(char => (
             <a key={char.id} href={`/chat/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ background: '#151219', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(168,85,247,0.2)' }}>
+              <div style={{ background: '#151219', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(168,85,247,0.25)' }}>
                 {char.image_url && <img src={char.image_url} alt={char.name} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />}
                 <div style={{ padding: '0.6rem 0.7rem' }}>
                   <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{char.name}</div>
