@@ -30,9 +30,8 @@ export default function Home() {
       fontFamily: 'system-ui, sans-serif'
     }}>
       <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
-        {/* Logo */}
         <img
-          src="YOUR_LOGO_PUBLIC_URL_HERE"
+          src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_4425.jpeg"
           alt="PrettyKitty’s Playground"
           style={{ width: '100%', maxWidth: '420px', margin: '1rem auto 0.5rem', display: 'block' }}
         />
