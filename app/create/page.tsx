@@ -69,21 +69,21 @@ export default function CreateStory() {
   }
 
   return (
-    <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
+    <div style={{ minHeight: '100vh', color: '#F2EDF5', padding: '1rem', paddingBottom: '90px' }}>
       <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>Create Story</h1>
 
       <input placeholder="Story Title" value={title} onChange={e => setTitle(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: 'rgba(21,18,25,0.6)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
       <textarea placeholder="Story Description" value={description} onChange={e => setDescription(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: 'rgba(21,18,25,0.6)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
 
       <h2 style={{ marginTop: '1.5rem', fontSize: '1.1rem' }}>Characters</h2>
       {characters.map((char, i) => (
-        <div key={i} style={{ background: '#151219', padding: '0.8rem', borderRadius: '12px', marginBottom: '0.8rem' }}>
+        <div key={i} style={{ background: 'rgba(21, 18, 25, 0.55)', backdropFilter: 'blur(6px)', padding: '0.8rem', borderRadius: '12px', marginBottom: '0.8rem', border: '1px solid rgba(168,85,247,0.2)' }}>
           <input placeholder="Character Name" value={char.name} onChange={e => updateCharacter(i, 'name', e.target.value)}
-            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: '#09090D', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.4rem' }} />
+            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.4rem' }} />
           <textarea placeholder="Character Description" value={char.description} onChange={e => updateCharacter(i, 'description', e.target.value)}
-            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: '#09090D', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.4rem', minHeight: '60px' }} />
+            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.4rem', minHeight: '60px' }} />
           <input type="file" accept="image/*" onChange={e => updateCharacter(i, 'image', e.target.files?.[0] || null)}
             style={{ margin: '0.5rem 0', color: '#F2EDF5' }} />
         </div>
