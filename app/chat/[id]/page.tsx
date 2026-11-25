@@ -11,6 +11,7 @@ const supabase = createClient(
 export default function Chat() {
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
+  const [imagePrompt, setImagePrompt] = useState('')
   const [character, setCharacter] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
@@ -22,6 +23,7 @@ export default function Chat() {
     async function load() {
       const { data: char } = await supabase.from('characters').select('*').eq('id', id).single()
       setCharacter(char)
+      if (char) setImagePrompt(`${char.name}, ${char.description || ''}`)
       const { data: msgs } = await supabase
         .from('messages')
         .select('*')
@@ -54,7 +56,7 @@ export default function Chat() {
       content: m.content
     }))
 
-    const systemPrompt = `You are ${character?.name || 'a character'}. Description: ${character?.description || ''}. Personality: ${character?.personality || ''}. Stay in character.`
+    const systemPrompt = `You are ${character?.name || 'a character'}. Description: ${character?.description || ''}. Personality: ${character?.personality || ''}. Stay fully in character. Be immersive and natural.`
 
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -66,7 +68,7 @@ export default function Chat() {
         body: JSON.stringify({
           model: 'llama-3.1-8b-instant',
           messages: [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: userContent }],
-          temperature: 0.85
+          temperature: 0.9
         })
       })
       const data = await res.json()
@@ -81,20 +83,12 @@ export default function Chat() {
   }
 
   async function generateImage() {
-    if (imageLoading) return
+    if (imageLoading || !imagePrompt.trim()) return
     setImageLoading(true)
-    const prompt = character
-      ? `${character.name}, ${character.description || ''}, cinematic, detailed, high quality`
-      : 'beautiful character portrait, cinematic'
-    const encoded = encodeURIComponent(prompt)
-    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=768&nologo=true`
+    const encoded = encodeURIComponent(imagePrompt + ', highly detailed, cinematic')
+    const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=768&nologo=true&enhance=true`
 
-    const imgMsg = {
-      character_id: id,
-      content: imageUrl,
-      role: 'image'
-    }
-    setMessages(prev => [...prev, { ...imgMsg, id: Date.now() }])
+    setMessages(prev => [...prev, { id: Date.now(), role: 'image', content: imageUrl }])
     setImageLoading(false)
   }
 
@@ -108,7 +102,7 @@ export default function Chat() {
         {messages.map(msg => (
           <div key={msg.id} style={{ margin: '0.6rem 0' }}>
             {msg.role === 'image' ? (
-              <img src={msg.content} alt="Generated" style={{ maxWidth: '100%', borderRadius: '16px', margin: '0.5rem 0' }} />
+              <img src={msg.content} alt="Generated" style={{ maxWidth: '100%', borderRadius: '16px' }} />
             ) : (
               <div style={{
                 padding: '0.8rem 1.1rem',
@@ -128,19 +122,16 @@ export default function Chat() {
       </div>
 
       <div style={{ padding: '0.8rem 1rem', borderTop: '1px solid #2a2a35' }}>
+        <input
+          value={imagePrompt}
+          onChange={e => setImagePrompt(e.target.value)}
+          placeholder="Image prompt (edit for NSFW, etc.)"
+          style={{ width: '100%', padding: '0.6rem 0.8rem', marginBottom: '0.5rem', borderRadius: '12px', border: '1px solid #333', background: '#151219', color: '#F2EDF5', fontSize: '0.85rem' }}
+        />
         <button
           onClick={generateImage}
           disabled={imageLoading}
-          style={{
-            width: '100%',
-            padding: '0.6rem',
-            marginBottom: '0.6rem',
-            borderRadius: '16px',
-            background: '#4B176D',
-            color: '#fff',
-            border: 'none',
-            fontSize: '0.9rem'
-          }}
+          style={{ width: '100%', padding: '0.6rem', marginBottom: '0.6rem', borderRadius: '16px', background: '#4B176D', color: '#fff', border: 'none' }}
         >
           ✨ Generate Image
         </button>
