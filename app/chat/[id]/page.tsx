@@ -63,7 +63,7 @@ export default function Chat() {
     setLoading(true)
     setError('')
 
-    const promptText = `${character.name}, ${character.description || ''}, ${character.personality || ''}, ${userPrompt}, highly detailed portrait, dark fantasy`
+    const promptText = `${character.name}, ${character.appearance || ''}, ${character.description || ''}, ${character.personality || ''}, ${userPrompt}, highly detailed portrait, dark fantasy`
 
     try {
       const res = await fetch('https://openrouter.ai/api/v1/images/generations', {
