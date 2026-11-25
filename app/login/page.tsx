@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
@@ -11,45 +11,79 @@ const supabase = createClient(
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.push('/')
-    })
-  }, [router])
-
-  async function signIn() {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setMessage(error.message)
-    else router.push('/')
-  }
-
-  async function signUp() {
-    const { error } = await supabase.auth.signUp({ email, password })
-    if (error) setMessage(error.message)
-    else setMessage('Check your email to confirm!')
+  async function handleAuth() {
+    setMessage('Working...')
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({ email, password })
+      if (error) setMessage(error.message)
+      else setMessage('Check your email to confirm!')
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) setMessage(error.message)
+      else router.push('/')
+    }
   }
 
   return (
-    <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'radial-gradient(ellipse at center, rgba(75, 23, 109, 0.35) 0%, #09090D 65%)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '1.5rem'
+    }}>
       <img
         src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0109.jpeg"
         alt="NightBite"
-        style={{ width: '100%', maxWidth: '340px', marginBottom: '2.5rem' }}
+        style={{ width: '100%', maxWidth: '320px', marginBottom: '2rem' }}
       />
-      <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)}
-        style={{ width: '100%', maxWidth: '320px', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-      <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)}
-        style={{ width: '100%', maxWidth: '320px', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-      <button onClick={signIn} style={{ width: '100%', maxWidth: '320px', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
-        Login
-      </button>
-      <button onClick={signUp} style={{ width: '100%', maxWidth: '320px', padding: '0.75rem', background: '#4B176D', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
-        Sign Up
-      </button>
-      {message && <p style={{ color: '#A855F7', textAlign: 'center', marginTop: '1rem' }}>{message}</p>}
+
+      <div style={{
+        width: '100%',
+        maxWidth: '380px',
+        background: 'rgba(21, 18, 25, 0.65)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(168, 85, 247, 0.25)',
+        borderRadius: '20px',
+        padding: '1.5rem'
+      }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '1rem', fontFamily: "'Cinzel Decorative', serif", color: '#9E092B' }}>
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
+        </h2>
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#09090D', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.6rem' }}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#09090D', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.6rem' }}
+        />
+
+        <button onClick={handleAuth}
+          style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.6rem', marginTop: '0.8rem', fontWeight: 500 }}>
+          {isSignUp ? 'Sign Up' : 'Log In'}
+        </button>
+
+        <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.9rem' }}>
+          <span onClick={() => setIsSignUp(!isSignUp)} style={{ color: '#A855F7', cursor: 'pointer' }}>
+            {isSignUp ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
+          </span>
+        </p>
+        {message && <p style={{ textAlign: 'center', marginTop: '0.8rem', color: '#A855F7' }}>{message}</p>}
+      </div>
     </div>
   )
 }
