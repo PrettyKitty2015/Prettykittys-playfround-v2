@@ -51,7 +51,7 @@ export default function Home() {
         <img
           src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0109.jpeg"
           alt="NightBite"
-          style={{ width: '100%', maxWidth: '280px', margin: '0 auto' }}
+          style={{ width: '100%', maxWidth: '280px', margin: '0 auto', mixBlendMode: 'screen' }}
         />
         {profile?.username && (
           <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.6rem' }}>
@@ -87,8 +87,8 @@ export default function Home() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.8rem' }}>
           {characters.map(char => (
             <div key={char.id} style={{ 
-              background: 'rgba(21, 18, 25, 0.65)', 
-              backdropFilter: 'blur(10px)',
+              background: 'rgba(21, 18, 25, 0.55)', 
+              backdropFilter: 'blur(8px)',
               border: '1px solid rgba(168, 85, 247, 0.22)',
               borderRadius: '16px',
               overflow: 'hidden'
