@@ -94,11 +94,10 @@ export default function Home() {
                   <div style={{ fontSize: '0.72rem', opacity: 0.65, marginTop: '0.2rem' }}>{char.description?.slice(0, 55)}...</div>
                 </div>
               </a>
-              {char.creator_id === profile?.id && (
-                <div style={{ padding: '0 0.75rem 0.6rem' }}>
-                  <a href={`/edit/${char.id}`} style={{ color: '#A855F7', fontSize: '0.7rem' }}>Edit</a>
-                </div>
-              )}
+              <div style={{ padding: '0 0.75rem 0.6rem', display: 'flex', justifyContent: 'space-between' }}>
+                <a href={`/character/${char.id}`} style={{ color: '#A855F7', fontSize: '0.7rem' }}>View</a>
+                {char.creator_id === profile?.id && <a href={`/edit/${char.id}`} style={{ color: '#A855F7', fontSize: '0.7rem' }}>Edit</a>}
+              </div>
             </div>
           ))}
         </div>
