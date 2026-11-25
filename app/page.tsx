@@ -53,7 +53,17 @@ export default function Home() {
           alt="PrettyKitty’s Playground"
           style={{ width: '100%', maxWidth: '280px', margin: '0 auto' }}
         />
-        <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '1.6rem', background: 'linear-gradient(90deg, #A855F7, #9E092B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: '0.4rem' }}>
+        <div style={{
+          fontFamily: "'Cinzel Decorative', serif",
+          fontSize: '2.2rem',
+          fontWeight: 700,
+          background: 'linear-gradient(180deg, #A855F7 0%, #9E092B 50%, #4B176D 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          textShadow: '0 2px 8px rgba(158, 9, 43, 0.6)',
+          letterSpacing: '0.05em',
+          marginTop: '0.3rem'
+        }}>
           NightBite
         </div>
         {profile?.username && (
@@ -106,8 +116,8 @@ export default function Home() {
         <a href="/" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
         <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
         <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/login" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🔑<br/>Login</a>
-        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Profile</a>
+        <a href="/personas" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
+        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
       </div>
     </div>
   )
