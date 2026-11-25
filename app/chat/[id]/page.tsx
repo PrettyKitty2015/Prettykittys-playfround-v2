@@ -61,7 +61,7 @@ export default function Chat() {
           'X-Title': 'NightBite'
         },
         body: JSON.stringify({
-          model: 'google/gemma-2-9b-it:free',
+          model: 'meta-llama/llama-3.1-8b-instruct:free',
           messages: [
             { role: 'system', content: `You are ${character?.name || 'a character'}. Personality: ${character?.personality || ''}. Description: ${character?.description || ''}. Scenario: ${character?.scenario || ''}. Stay in character.` },
             ...messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
