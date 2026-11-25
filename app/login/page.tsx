@@ -35,7 +35,7 @@ export default function Login() {
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
       <img
-        src="https://i.imgur.com/your-nightbite-logo.png"
+        src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0109.jpeg"
         alt="NightBite"
         style={{ width: '100%', maxWidth: '340px', marginBottom: '2.5rem' }}
       />
