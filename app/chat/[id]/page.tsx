@@ -59,12 +59,12 @@ export default function Chat() {
 
   async function generateImage() {
     if (!character) return
+    const userPrompt = prompt('Describe the image you want (or leave blank for default):') || ''
     setLoading(true)
     setError('')
-    const prompt = encodeURIComponent(
-      `${character.name}, ${character.description || ''}, ${character.personality || ''}, ${character.scenario || ''}, highly detailed portrait matching the character description exactly, dark fantasy style`
-    )
-    const imageUrl = `https://image.pollinations.ai/prompt/${prompt}?nologo=true&width=768&height=1024&enhance=true`
+    const base = `${character.name}, ${character.description || ''}, ${character.personality || ''}`
+    const fullPrompt = encodeURIComponent(`${base}, ${userPrompt}, highly detailed, dark fantasy`)
+    const imageUrl = `https://image.pollinations.ai/prompt/${fullPrompt}?nologo=true&width=768&height=1024&enhance=true`
     const imgMsg = { role: 'assistant', content: `![image](${imageUrl})`, character_id: id }
     setMessages(prev => [...prev, imgMsg])
 
