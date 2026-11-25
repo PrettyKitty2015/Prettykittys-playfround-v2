@@ -70,7 +70,10 @@ export default function CreateStory() {
 
   return (
     <div style={{ minHeight: '100vh', color: '#F2EDF5', padding: '1rem', paddingBottom: '90px' }}>
-      <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>Create Story</h1>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.4rem', marginRight: '0.5rem' }}>←</button>
+        <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', margin: 0 }}>Create Story</h1>
+      </div>
 
       <input placeholder="Story Title" value={title} onChange={e => setTitle(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: 'rgba(21,18,25,0.6)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
