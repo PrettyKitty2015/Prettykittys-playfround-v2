@@ -59,7 +59,7 @@ export default function Chat() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'gemma2-9b-it',
+          model: 'llama-3.1-8b-instant',
           messages: [
             { role: 'system', content: `You are ${character?.name || 'a character'}. Personality: ${character?.personality || ''}. Description: ${character?.description || ''}. Scenario: ${character?.scenario || ''}. Stay in character.` },
             ...messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
