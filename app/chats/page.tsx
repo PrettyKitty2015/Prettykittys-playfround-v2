@@ -40,6 +40,13 @@ export default function Chats() {
     load()
   }
 
+  async function newChat(characterId: string) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    await supabase.from('messages').delete().eq('user_id', session.user.id).eq('character_id', characterId)
+    window.location.href = `/chat/${characterId}`
+  }
+
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -47,7 +54,7 @@ export default function Chats() {
         <a href="/personas" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.9rem' }}>+ Persona</a>
       </div>
 
-      {chats.length === 0 && <p style={{ textAlign: 'center', opacity: 0.6 }}>No chats yet. Start one from a character!</p>}
+      {chats.length === 0 && <p style={{ textAlign: 'center', opacity: 0.6 }}>No chats yet.</p>}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
         {chats.map((chat: any) => (
@@ -59,9 +66,10 @@ export default function Chats() {
               <div style={{ fontWeight: 600 }}>{chat.characters?.name}</div>
               <div style={{ fontSize: '0.75rem', opacity: 0.65 }}>{chat.characters?.description?.slice(0, 40)}...</div>
             </div>
-            <div style={{ display: 'flex', gap: '0.4rem' }}>
-              <a href={`/chat/${chat.character_id}`} style={{ background: '#4B176D', color: '#fff', padding: '0.4rem 0.7rem', borderRadius: '8px', textDecoration: 'none', fontSize: '0.75rem' }}>Open</a>
-              <button onClick={() => deleteChat(chat.character_id)} style={{ background: '#9E092B', color: '#fff', border: 'none', padding: '0.4rem 0.7rem', borderRadius: '8px', fontSize: '0.75rem' }}>Delete</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <a href={`/chat/${chat.character_id}`} style={{ background: '#4B176D', color: '#fff', padding: '0.35rem 0.6rem', borderRadius: '8px', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>Open</a>
+              <button onClick={() => newChat(chat.character_id)} style={{ background: '#086B50', color: '#fff', border: 'none', padding: '0.35rem 0.6rem', borderRadius: '8px', fontSize: '0.7rem' }}>New Chat</button>
+              <button onClick={() => deleteChat(chat.character_id)} style={{ background: '#9E092B', color: '#fff', border: 'none', padding: '0.35rem 0.6rem', borderRadius: '8px', fontSize: '0.7rem' }}>Delete</button>
             </div>
           </div>
         ))}
