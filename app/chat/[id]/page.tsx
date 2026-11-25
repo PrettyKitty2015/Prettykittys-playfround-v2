@@ -61,33 +61,14 @@ export default function Chat() {
     if (!character) return
     setLoading(true)
     setError('')
-    try {
-      const res = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt: `${character.name}, ${character.description || ''}, ${character.personality || ''}, dark fantasy style, high detail`,
-          n: 1,
-          size: '1024x1024'
-        })
-      })
-      const data = await res.json()
-      if (data.data?.[0]?.url) {
-        const imgMsg = { role: 'assistant', content: `![image](${data.data[0].url})`, character_id: id }
-        setMessages(prev => [...prev, imgMsg])
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          await supabase.from('messages').insert({ ...imgMsg, user_id: session.user.id })
-        }
-      } else {
-        setError('Image generation failed')
-      }
-    } catch (err: any) {
-      setError(err.message)
+    const prompt = encodeURIComponent(`${character.name}, ${character.description || ''}, ${character.personality || ''}, dark fantasy, detailed`)
+    const imageUrl = `https://image.pollinations.ai/prompt/${prompt}?nologo=true&width=768&height=768`
+    const imgMsg = { role: 'assistant', content: `![image](${imageUrl})`, character_id: id }
+    setMessages(prev => [...prev, imgMsg])
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      await supabase.from('messages').insert({ ...imgMsg, user_id: session.user.id })
     }
     setLoading(false)
   }
@@ -144,7 +125,6 @@ Always write in third person. Use *asterisks* for actions and narration. Put spo
       })
 
       if (!res.ok) {
-        const errText = await res.text()
         setError(`API Error: ${res.status}`)
         setLoading(false)
         return
