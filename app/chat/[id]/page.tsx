@@ -13,6 +13,7 @@ export default function Chat() {
   const [input, setInput] = useState('')
   const [character, setCharacter] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const params = useParams()
   const id = params.id as string
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -37,8 +38,10 @@ export default function Chat() {
 
   async function send() {
     if (!input.trim() || loading) return
+    setError('')
     const userMsg = { role: 'user', content: input, character_id: id }
     setMessages(prev => [...prev, userMsg])
+    const currentInput = input
     setInput('')
     setLoading(true)
 
@@ -47,27 +50,39 @@ export default function Chat() {
       await supabase.from('messages').insert({ ...userMsg, user_id: session.user.id })
     }
 
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          { role: 'system', content: `You are ${character?.name}. ${character?.personality || ''} ${character?.description || ''}` },
-          ...messages.map(m => ({ role: m.role, content: m.content })),
-          { role: 'user', content: input }
-        ]
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant',
+          messages: [
+            { role: 'system', content: `You are ${character?.name || 'a character'}. ${character?.personality || ''} ${character?.description || ''} ${character?.scenario || ''}` },
+            ...messages.map(m => ({ role: m.role, content: m.content })),
+            { role: 'user', content: currentInput }
+          ]
+        })
       })
-    })
-    const data = await res.json()
-    const reply = data.choices?.[0]?.message?.content || '...'
-    const aiMsg = { role: 'assistant', content: reply, character_id: id }
-    setMessages(prev => [...prev, aiMsg])
-    if (session) {
-      await supabase.from('messages').insert({ ...aiMsg, user_id: session.user.id })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        setError(`API Error: ${res.status} - ${errText.slice(0, 100)}`)
+        setLoading(false)
+        return
+      }
+
+      const data = await res.json()
+      const reply = data.choices?.[0]?.message?.content || 'No response'
+      const aiMsg = { role: 'assistant', content: reply, character_id: id }
+      setMessages(prev => [...prev, aiMsg])
+      if (session) {
+        await supabase.from('messages').insert({ ...aiMsg, user_id: session.user.id })
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to reach AI')
     }
     setLoading(false)
   }
@@ -99,6 +114,7 @@ export default function Chat() {
           </div>
         ))}
         {loading && <div style={{ opacity: 0.6, fontStyle: 'italic' }}>Typing...</div>}
+        {error && <div style={{ color: '#ff6b6b', marginTop: '0.5rem', fontSize: '0.85rem' }}>{error}</div>}
         <div ref={bottomRef} />
       </div>
 
