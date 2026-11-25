@@ -59,18 +59,42 @@ export default function Chat() {
 
   async function generateImage() {
     if (!character) return
-    const userPrompt = prompt('Describe the image you want (or leave blank for default):') || ''
+    const userPrompt = prompt('Extra details for the image (or leave blank):') || ''
     setLoading(true)
     setError('')
-    const base = `${character.name}, ${character.description || ''}, ${character.personality || ''}`
-    const fullPrompt = encodeURIComponent(`${base}, ${userPrompt}, highly detailed, dark fantasy`)
-    const imageUrl = `https://image.pollinations.ai/prompt/${fullPrompt}?nologo=true&width=768&height=1024&enhance=true`
-    const imgMsg = { role: 'assistant', content: `![image](${imageUrl})`, character_id: id }
-    setMessages(prev => [...prev, imgMsg])
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session) {
-      await supabase.from('messages').insert({ ...imgMsg, user_id: session.user.id })
+    const promptText = `${character.name}, ${character.description || ''}, ${character.personality || ''}, ${userPrompt}, highly detailed portrait, dark fantasy, matching the character exactly`
+
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://prettykittys-playground.vercel.app',
+          'X-Title': 'NightBite'
+        },
+        body: JSON.stringify({
+          model: 'black-forest-labs/flux-1.1-pro',
+          messages: [{ role: 'user', content: promptText }],
+          modalities: ['image']
+        })
+      })
+
+      const data = await res.json()
+      const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url
+      if (imageUrl) {
+        const imgMsg = { role: 'assistant', content: `![image](${imageUrl})`, character_id: id }
+        setMessages(prev => [...prev, imgMsg])
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          await supabase.from('messages').insert({ ...imgMsg, user_id: session.user.id })
+        }
+      } else {
+        setError('Image generation failed')
+      }
+    } catch (err: any) {
+      setError(err.message)
     }
     setLoading(false)
   }
