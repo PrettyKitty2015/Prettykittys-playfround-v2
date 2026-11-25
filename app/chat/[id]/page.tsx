@@ -12,6 +12,9 @@ export default function Chat() {
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [character, setCharacter] = useState<any>(null)
+  const [personas, setPersonas] = useState<any[]>([])
+  const [selectedPersona, setSelectedPersona] = useState<any>(null)
+  const [showPersonaPicker, setShowPersonaPicker] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const params = useParams()
@@ -23,6 +26,13 @@ export default function Chat() {
     async function load() {
       const { data: char } = await supabase.from('characters').select('*').eq('id', id).single()
       setCharacter(char)
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const { data: pers } = await supabase.from('personas').select('*').eq('user_id', session.user.id)
+        if (pers) setPersonas(pers)
+      }
+
       const { data: msgs } = await supabase
         .from('messages')
         .select('*')
@@ -51,6 +61,10 @@ export default function Chat() {
       await supabase.from('messages').insert({ ...userMsg, user_id: session.user.id })
     }
 
+    const personaText = selectedPersona
+      ? `The user is roleplaying as ${selectedPersona.name}. Background: ${selectedPersona.background || ''}. Appearance: ${selectedPersona.appearance || ''}.`
+      : ''
+
     try {
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -63,7 +77,7 @@ export default function Chat() {
         body: JSON.stringify({
           model: 'meta-llama/llama-3.1-8b-instruct',
           messages: [
-            { role: 'system', content: `You are ${character?.name || 'a character'}. Personality: ${character?.personality || ''}. Description: ${character?.description || ''}. Scenario: ${character?.scenario || ''}. Stay in character.` },
+            { role: 'system', content: `You are ${character?.name || 'a character'}. Personality: ${character?.personality || ''}. Description: ${character?.description || ''}. Scenario: ${character?.scenario || ''}. ${personaText} Stay in character and respond to the user's persona.` },
             ...messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content: currentInput }
           ]
@@ -95,8 +109,27 @@ export default function Chat() {
       <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid #2a2a35', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
         <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.2rem', cursor: 'pointer' }}>←</button>
         {character?.image_url && <img src={character.image_url} alt="" style={{ width: '42px', height: '42px', borderRadius: '10px', objectFit: 'cover' }} />}
-        <div style={{ fontWeight: 600, fontFamily: "'Cinzel Decorative', serif" }}>{character?.name || 'Chat'}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600, fontFamily: "'Cinzel Decorative', serif" }}>{character?.name || 'Chat'}</div>
+          <div onClick={() => setShowPersonaPicker(!showPersonaPicker)} style={{ fontSize: '0.75rem', color: '#A855F7', cursor: 'pointer' }}>
+            {selectedPersona ? `Playing as: ${selectedPersona.name}` : 'Select Persona'}
+          </div>
+        </div>
       </div>
+
+      {showPersonaPicker && (
+        <div style={{ background: '#151219', padding: '0.8rem', borderBottom: '1px solid #2a2a35' }}>
+          <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>Choose a Persona:</div>
+          {personas.length === 0 && <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>No personas yet. Create one first.</div>}
+          {personas.map(p => (
+            <div key={p.id} onClick={() => { setSelectedPersona(p); setShowPersonaPicker(false) }}
+              style={{ padding: '0.5rem', borderRadius: '8px', background: selectedPersona?.id === p.id ? '#4B176D' : '#09090D', marginBottom: '0.3rem', cursor: 'pointer' }}>
+              {p.name}
+            </div>
+          ))}
+          <a href="/personas" style={{ color: '#A855F7', fontSize: '0.8rem' }}>+ Create New Persona</a>
+        </div>
+      )}
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
         {messages.map((m, i) => (
@@ -133,9 +166,9 @@ export default function Chat() {
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
         <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
         <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
-        <a href="/chats" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/login" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🔑<br/>Login</a>
-        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Profile</a>
+        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
+        <a href="/personas" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
+        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
       </div>
     </div>
   )
