@@ -67,7 +67,7 @@ export default function Home() {
               alt={char.name}
               style={{
                 width: '100%',
-                maxHeight: '300px',
+                height: '250px',
                 objectFit: 'cover',
                 borderRadius: '0.5rem',
                 marginBottom: '0.5rem'
