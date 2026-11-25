@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+body {
+  @apply bg-obsidian text-ivory font-sans;
+}
+
+.glass-panel {
+  @apply bg-midnight/70 backdrop-blur-md border border-silver/20 rounded-xl;
+}
+
+.btn-primary {
+  @apply bg-crimson hover:bg-crimson/80 text-ivory px-6 py-2.5 rounded-lg font-medium transition-all;
+}
+
+.btn-secondary {
+  @apply border border-amethyst text-violet hover:bg-amethyst/20 px-6 py-2.5 rounded-lg transition-all;
+}
