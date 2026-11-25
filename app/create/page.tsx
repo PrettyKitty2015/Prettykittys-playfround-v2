@@ -1,64 +1,31 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
-import Cropper from 'react-easy-crop'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export default function CreateCharacter() {
-  const [name, setName] = useState('')
+export default function CreateStory() {
+  const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [personality, setPersonality] = useState('')
-  const [scenario, setScenario] = useState('')
-  const [appearance, setAppearance] = useState('')
-  const [imageSrc, setImageSrc] = useState<string | null>(null)
-  const [crop, setCrop] = useState({ x: 0, y: 0 })
-  const [zoom, setZoom] = useState(1)
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
+  const [characters, setCharacters] = useState([{ name: '', description: '', image: null as File | null }])
   const [message, setMessage] = useState('')
   const router = useRouter()
 
-  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels)
-  }, [])
-
-  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.files && e.target.files.length > 0) {
-      const reader = new FileReader()
-      reader.addEventListener('load', () => setImageSrc(reader.result as string))
-      reader.readAsDataURL(e.target.files[0])
-    }
+  function addCharacter() {
+    setCharacters([...characters, { name: '', description: '', image: null }])
   }
 
-  async function getCroppedImg() {
-    if (!imageSrc || !croppedAreaPixels) return null
-    const image = new Image()
-    image.src = imageSrc
-    await new Promise(resolve => image.onload = resolve)
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return null
-    canvas.width = croppedAreaPixels.width
-    canvas.height = croppedAreaPixels.height
-    ctx.drawImage(
-      image,
-      croppedAreaPixels.x,
-      croppedAreaPixels.y,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height,
-      0,
-      0,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height
-    )
-    return new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+  function updateCharacter(index: number, field: string, value: any) {
+    const updated = [...characters]
+    updated[index] = { ...updated[index], [field]: value }
+    setCharacters(updated)
   }
 
-  async function saveCharacter() {
+  async function save() {
     setMessage('Saving...')
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
@@ -66,82 +33,69 @@ export default function CreateCharacter() {
       return
     }
 
-    let imageUrl = null
-    if (imageSrc && croppedAreaPixels) {
-      const blob = await getCroppedImg()
-      if (blob) {
-        const fileName = `${Date.now()}.jpg`
-        const { error: uploadError } = await supabase.storage
-          .from('character-images')
-          .upload(fileName, blob)
+    const { data: story, error: storyError } = await supabase.from('stories').insert({
+      title,
+      description,
+      user_id: session.user.id
+    }).select().single()
+
+    if (storyError || !story) {
+      setMessage(storyError?.message || 'Failed to create story')
+      return
+    }
+
+    for (const char of characters) {
+      if (!char.name) continue
+      let imageUrl = null
+      if (char.image) {
+        const fileName = `${Date.now()}-${char.image.name}`
+        const { error: uploadError } = await supabase.storage.from('character-images').upload(fileName, char.image)
         if (!uploadError) {
           const { data } = supabase.storage.from('character-images').getPublicUrl(fileName)
           imageUrl = data.publicUrl
         }
       }
+      await supabase.from('characters').insert({
+        name: char.name,
+        description: char.description,
+        image_url: imageUrl,
+        story_id: story.id,
+        creator_id: session.user.id
+      })
     }
 
-    const { error } = await supabase.from('characters').insert({
-      name,
-      description,
-      personality,
-      scenario,
-      appearance,
-      image_url: imageUrl,
-      creator_id: session.user.id
-    })
-
-    if (error) setMessage(error.message)
-    else {
-      setMessage('Character created!')
-      setTimeout(() => router.push('/'), 1000)
-    }
+    setMessage('Story created!')
+    setTimeout(() => router.push('/'), 1000)
   }
 
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
-      <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>Create Character</h1>
+      <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>Create Story</h1>
 
-      <input placeholder="Name" value={name} onChange={e => setName(e.target.value)}
+      <input placeholder="Story Title" value={title} onChange={e => setTitle(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-      <textarea placeholder="Description" value={description} onChange={e => setDescription(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '70px' }} />
-      <textarea placeholder="Personality" value={personality} onChange={e => setPersonality(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '70px' }} />
-      <textarea placeholder="Scenario / Intro" value={scenario} onChange={e => setScenario(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '70px' }} />
-      <textarea placeholder="Appearance (for image generation — hair, tattoos, clothing, etc.)" value={appearance} onChange={e => setAppearance(e.target.value)}
+      <textarea placeholder="Story Description" value={description} onChange={e => setDescription(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
 
-      <input type="file" accept="image/*" onChange={onFileChange} style={{ margin: '1rem 0', color: '#F2EDF5' }} />
-
-      {imageSrc && (
-        <div style={{ position: 'relative', width: '100%', height: '300px', margin: '1rem 0' }}>
-          <Cropper
-            image={imageSrc}
-            crop={crop}
-            zoom={zoom}
-            aspect={3 / 4}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-          />
+      <h2 style={{ marginTop: '1.5rem', fontSize: '1.1rem' }}>Characters</h2>
+      {characters.map((char, i) => (
+        <div key={i} style={{ background: '#151219', padding: '0.8rem', borderRadius: '12px', marginBottom: '0.8rem' }}>
+          <input placeholder="Character Name" value={char.name} onChange={e => updateCharacter(i, 'name', e.target.value)}
+            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: '#09090D', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.4rem' }} />
+          <textarea placeholder="Character Description" value={char.description} onChange={e => updateCharacter(i, 'description', e.target.value)}
+            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: '#09090D', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.4rem', minHeight: '60px' }} />
+          <input type="file" accept="image/*" onChange={e => updateCharacter(i, 'image', e.target.files?.[0] || null)}
+            style={{ margin: '0.5rem 0', color: '#F2EDF5' }} />
         </div>
-      )}
+      ))}
+      <button onClick={addCharacter} style={{ width: '100%', padding: '0.6rem', background: '#4B176D', color: '#fff', border: 'none', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+        + Add Character
+      </button>
 
-      <button onClick={saveCharacter}
-        style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '1rem' }}>
-        Save Character
+      <button onClick={save} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem' }}>
+        Save Story
       </button>
       {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
-
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
-        <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
-        <a href="/create" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
-        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/personas" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
-        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
-      </div>
     </div>
   )
 }
