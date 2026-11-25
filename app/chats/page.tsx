@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,7 +9,6 @@ const supabase = createClient(
 
 export default function Chats() {
   const [chats, setChats] = useState<any[]>([])
-  const router = useRouter()
 
   async function load() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -49,7 +47,7 @@ export default function Chats() {
         <a href="/personas" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.9rem' }}>+ Persona</a>
       </div>
 
-      {chats.length === 0 && <p style={{ textAlign: 'center', opacity: 0.6 }}>No chats yet.</p>}
+      {chats.length === 0 && <p style={{ textAlign: 'center', opacity: 0.6 }}>No chats yet. Start one from a character!</p>}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
         {chats.map((chat: any) => (
