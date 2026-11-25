@@ -2,20 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
-
 body {
-  @apply bg-obsidian text-ivory font-sans;
-}
-
-.glass-panel {
-  @apply bg-midnight/70 backdrop-blur-md border border-silver/20 rounded-xl;
+  background-color: #09090D;
+  color: #F2EDF5;
+  font-family: system-ui, sans-serif;
 }
 
 .btn-primary {
-  @apply bg-crimson hover:bg-crimson/80 text-ivory px-6 py-2.5 rounded-lg font-medium transition-all;
+  background-color: #9E092B;
+  color: #F2EDF5;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-secondary {
-  @apply border border-amethyst text-violet hover:bg-amethyst/20 px-6 py-2.5 rounded-lg transition-all;
+  border: 1px solid #BFC0CC;
+  color: #F2EDF5;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 0.5rem;
 }
