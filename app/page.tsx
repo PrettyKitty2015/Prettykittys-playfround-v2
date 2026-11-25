@@ -86,15 +86,20 @@ export default function Home() {
         <h3 style={{ fontSize: '1rem', margin: '0 0 0.8rem 0' }}>Characters</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.8rem' }}>
           {characters.map(char => (
-            <a key={char.id} href={`/chat/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ background: '#151219', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(168,85,247,0.25)' }}>
+            <div key={char.id} style={{ background: '#151219', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(168,85,247,0.25)' }}>
+              <a href={`/chat/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 {char.image_url && <img src={char.image_url} alt={char.name} style={{ width: '100%', height: '190px', objectFit: 'cover' }} />}
                 <div style={{ padding: '0.65rem 0.75rem' }}>
                   <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{char.name}</div>
                   <div style={{ fontSize: '0.72rem', opacity: 0.65, marginTop: '0.2rem' }}>{char.description?.slice(0, 55)}...</div>
                 </div>
-              </div>
-            </a>
+              </a>
+              {char.creator_id === profile?.id && (
+                <div style={{ padding: '0 0.75rem 0.6rem' }}>
+                  <a href={`/edit/${char.id}`} style={{ color: '#A855F7', fontSize: '0.7rem' }}>Edit</a>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>
