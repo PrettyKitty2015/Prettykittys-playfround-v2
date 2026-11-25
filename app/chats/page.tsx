@@ -19,16 +19,14 @@ export default function Chats() {
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
     if (data) {
-      const unique: any[] = []
-      const seen = new Set()
+      const map = new Map()
       for (const m of data) {
         const key = m.chat_id || m.character_id
-        if (key && !seen.has(key)) {
-          seen.add(key)
-          unique.push(m)
+        if (key && !map.has(key)) {
+          map.set(key, m)
         }
       }
-      setChats(unique)
+      setChats(Array.from(map.values()))
     }
   }
 
