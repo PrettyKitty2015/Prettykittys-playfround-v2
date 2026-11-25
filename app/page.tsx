@@ -86,7 +86,13 @@ export default function Home() {
         <h3 style={{ fontSize: '1rem', margin: '0 0 0.8rem 0' }}>Characters</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.8rem' }}>
           {characters.map(char => (
-            <div key={char.id} style={{ background: '#151219', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(168,85,247,0.25)' }}>
+            <div key={char.id} style={{ 
+              background: 'rgba(21, 18, 25, 0.7)', 
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(168, 85, 247, 0.2)',
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }}>
               <a href={`/chat/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 {char.image_url && <img src={char.image_url} alt={char.name} style={{ width: '100%', height: '190px', objectFit: 'cover' }} />}
                 <div style={{ padding: '0.65rem 0.75rem' }}>
