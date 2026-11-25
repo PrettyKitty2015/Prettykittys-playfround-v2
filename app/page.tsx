@@ -1,40 +1,42 @@
-export default function Home() {
-  return (
-    <div className="relative">
-      <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-midnight to-obsidian" />
-        <div className="relative z-10 text-center px-4 max-w-4xl">
-          <h1 className="font-serif text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-crimson via-violet to-amethyst bg-clip-text text-transparent">
-            PrettyKitty’s Playground
-          </h1>
-          <p className="text-xl md:text-2xl text-silver mb-8 max-w-2xl mx-auto">
-            Where imagination runs wild, fantasies come alive, and every story has a little bite.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/create" className="btn-primary text-lg px-8 py-3">Start Creating</a>
-            <a href="/discover" className="btn-secondary text-lg px-8 py-3">Explore Characters</a>
-          </div>
-        </div>
-      </section>
+'use client'
+import { useEffect, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 
-      <section className="max-w-7xl mx-auto px-4 py-20">
-        <h2 className="font-serif text-3xl text-center mb-12">Featured Characters</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="glass-panel p-5 hover:border-violet/40 transition">
-              <div className="aspect-[3/4] bg-midnight rounded-lg mb-4 flex items-center justify-center text-silver">
-                Character Art
-              </div>
-              <h3 className="font-serif text-xl mb-1">Character Name</h3>
-              <p className="text-sm text-silver mb-3">by Creator</p>
-              <div className="flex gap-2">
-                <span className="text-xs bg-crimson/20 text-crimson px-2 py-1 rounded">Dark Romance</span>
-                <span className="text-xs bg-amethyst/20 text-violet px-2 py-1 rounded">Fantasy</span>
-              </div>
-            </div>
-          ))}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+export default function Home() {
+  const [characters, setCharacters] = useState<any[]>([])
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase.from('characters').select('*').order('created_at', { ascending: false })
+      if (data) setCharacters(data)
+    }
+    load()
+  }, [])
+
+  return (
+    <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }}>
+      <h1 style={{ color: '#9E092B', fontSize: '2.5rem' }}>PrettyKitty’s Playground</h1>
+      <p style={{ marginBottom: '2rem' }}>Where imagination runs wild, fantasies come alive, and every story has a little bite.</p>
+      
+      <div style={{ marginBottom: '2rem' }}>
+        <a href="/create" style={{ background: '#9E092B', color: '#fff', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', textDecoration: 'none', marginRight: '1rem' }}>Create Character</a>
+        <a href="/login" style={{ color: '#A855F7' }}>Login</a>
+      </div>
+
+      <h2>Your Characters</h2>
+      {characters.length === 0 && <p>No characters yet. Create one!</p>}
+      {characters.map(char => (
+        <div key={char.id} style={{ background: '#151219', padding: '1rem', margin: '1rem 0', borderRadius: '0.5rem', border: '1px solid #333' }}>
+          <h3 style={{ color: '#A855F7', margin: '0 0 0.5rem 0' }}>{char.name}</h3>
+          <p style={{ margin: '0.25rem 0' }}>{char.description}</p>
+          <p style={{ margin: '0.25rem 0', fontStyle: 'italic' }}>{char.personality}</p>
         </div>
-      </section>
+      ))}
     </div>
-  );
+  )
 }
