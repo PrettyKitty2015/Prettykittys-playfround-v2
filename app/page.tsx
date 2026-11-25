@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { useRouter } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,39 +12,43 @@ export default function Home() {
   const [characters, setCharacters] = useState<any[]>([])
   const [recentChats, setRecentChats] = useState<any[]>([])
   const [profile, setProfile] = useState<any>(null)
+  const router = useRouter()
 
   useEffect(() => {
     async function load() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/login')
+        return
+      }
+
       const { data: chars } = await supabase.from('characters').select('*').order('created_at', { ascending: false })
       if (chars) setCharacters(chars)
 
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
-        if (prof) setProfile(prof)
+      const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+      if (prof) setProfile(prof)
 
-        const { data: msgs } = await supabase
-          .from('messages')
-          .select('character_id, characters(name, image_url)')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false })
-          .limit(20)
+      const { data: msgs } = await supabase
+        .from('messages')
+        .select('character_id, characters(name, image_url)')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(20)
 
-        if (msgs) {
-          const unique = []
-          const seen = new Set()
-          for (const m of msgs) {
-            if (m.character_id && !seen.has(m.character_id)) {
-              seen.add(m.character_id)
-              unique.push(m)
-            }
+      if (msgs) {
+        const unique = []
+        const seen = new Set()
+        for (const m of msgs) {
+          if (m.character_id && !seen.has(m.character_id)) {
+            seen.add(m.character_id)
+            unique.push(m)
           }
-          setRecentChats(unique.slice(0, 6))
         }
+        setRecentChats(unique.slice(0, 6))
       }
     }
     load()
-  }, [])
+  }, [router])
 
   return (
     <div style={{ minHeight: '100vh', color: '#F2EDF5', fontFamily: 'system-ui, sans-serif', paddingBottom: '90px' }}>
