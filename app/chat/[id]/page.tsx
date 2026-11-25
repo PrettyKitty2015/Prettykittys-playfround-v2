@@ -63,10 +63,10 @@ export default function Chat() {
     setLoading(true)
     setError('')
 
-    const promptText = `${character.name}, ${character.description || ''}, ${character.personality || ''}, ${userPrompt}, highly detailed portrait, dark fantasy, matching the character exactly`
+    const promptText = `${character.name}, ${character.description || ''}, ${character.personality || ''}, ${userPrompt}, highly detailed portrait, dark fantasy`
 
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const res = await fetch('https://openrouter.ai/api/v1/images/generations', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
@@ -76,13 +76,14 @@ export default function Chat() {
         },
         body: JSON.stringify({
           model: 'black-forest-labs/flux-1.1-pro',
-          messages: [{ role: 'user', content: promptText }],
-          modalities: ['image']
+          prompt: promptText,
+          n: 1,
+          size: '1024x1024'
         })
       })
 
       const data = await res.json()
-      const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url
+      const imageUrl = data.data?.[0]?.url
       if (imageUrl) {
         const imgMsg = { role: 'assistant', content: `![image](${imageUrl})`, character_id: id }
         setMessages(prev => [...prev, imgMsg])
@@ -91,7 +92,7 @@ export default function Chat() {
           await supabase.from('messages').insert({ ...imgMsg, user_id: session.user.id })
         }
       } else {
-        setError('Image generation failed')
+        setError('Image generation failed: ' + JSON.stringify(data).slice(0, 100))
       }
     } catch (err: any) {
       setError(err.message)
