@@ -57,6 +57,41 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  async function generateImage() {
+    if (!character) return
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt: `${character.name}, ${character.description || ''}, ${character.personality || ''}, dark fantasy style, high detail`,
+          n: 1,
+          size: '1024x1024'
+        })
+      })
+      const data = await res.json()
+      if (data.data?.[0]?.url) {
+        const imgMsg = { role: 'assistant', content: `![image](${data.data[0].url})`, character_id: id }
+        setMessages(prev => [...prev, imgMsg])
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          await supabase.from('messages').insert({ ...imgMsg, user_id: session.user.id })
+        }
+      } else {
+        setError('Image generation failed')
+      }
+    } catch (err: any) {
+      setError(err.message)
+    }
+    setLoading(false)
+  }
+
   async function send() {
     if (!input.trim() || loading) return
     setError('')
@@ -169,7 +204,11 @@ Always write in third person. Use *asterisks* for actions and narration. Put spo
               border: '1px solid #2a2a35',
               lineHeight: '1.5'
             }}>
-              {formatMessage(m.content)}
+              {m.content.startsWith('![image]') ? (
+                <img src={m.content.match(/\((.*?)\)/)?.[1]} alt="" style={{ maxWidth: '100%', borderRadius: '12px' }} />
+              ) : (
+                formatMessage(m.content)
+              )}
             </div>
           </div>
         ))}
@@ -187,6 +226,7 @@ Always write in third person. Use *asterisks* for actions and narration. Put spo
             placeholder="Type a message..."
             style={{ flex: 1, padding: '0.7rem', borderRadius: '12px', border: '1px solid #333', background: '#151219', color: '#F2EDF5' }}
           />
+          <button onClick={generateImage} style={{ padding: '0 0.7rem', background: '#4B176D', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '0.75rem' }}>Image</button>
           <button onClick={send} style={{ padding: '0 1rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '12px' }}>Send</button>
         </div>
       </div>
@@ -194,8 +234,8 @@ Always write in third person. Use *asterisks* for actions and narration. Put spo
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
         <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
         <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
-        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/personas" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
+        <a href="/chats" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
+        <a href="/personas" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
         <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
       </div>
     </div>
