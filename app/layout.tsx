@@ -5,8 +5,8 @@ export const metadata: Metadata = {
   title: "NightBite",
   description: "PrettyKitty’s Playground – Where imagination runs wild",
   icons: {
-    icon: "/icon.png",
-    apple: "/apple-icon.png",
+    icon: "/icon.png.jpg",
+    apple: "/icon.png.jpg",
   },
 }
 
