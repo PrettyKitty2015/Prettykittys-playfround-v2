@@ -21,12 +21,14 @@ export default function EditCharacter() {
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
   const [message, setMessage] = useState('')
+  const [isCreator, setIsCreator] = useState(false)
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
 
   useEffect(() => {
     async function load() {
+      const { data: { session } } = await supabase.auth.getSession()
       const { data } = await supabase.from('characters').select('*').eq('id', id).single()
       if (data) {
         setName(data.name || '')
@@ -35,6 +37,7 @@ export default function EditCharacter() {
         setScenario(data.scenario || '')
         setAppearance(data.appearance || '')
         setExistingImage(data.image_url || '')
+        if (session && data.creator_id === session.user.id) setIsCreator(true)
       }
     }
     if (id) load()
@@ -103,9 +106,30 @@ export default function EditCharacter() {
     }
   }
 
+  async function deleteCharacter() {
+    if (!confirm('Delete this character? This cannot be undone.')) return
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const { error } = await supabase.from('characters').delete().eq('id', id).eq('creator_id', session.user.id)
+    if (error) setMessage(error.message)
+    else router.push('/')
+  }
+
+  if (!isCreator) {
+    return (
+      <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '2rem', textAlign: 'center' }}>
+        <p>You can only edit characters you created.</p>
+        <button onClick={() => router.back()} style={{ marginTop: '1rem', color: '#A855F7', background: 'none', border: 'none' }}>Go Back</button>
+      </div>
+    )
+  }
+
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
-      <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>Edit Character</h1>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.2rem', marginRight: '0.5rem' }}>←</button>
+        <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', margin: 0 }}>Edit Character</h1>
+      </div>
 
       <input placeholder="Name" value={name} onChange={e => setName(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
@@ -142,15 +166,11 @@ export default function EditCharacter() {
         style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '1rem' }}>
         Save Changes
       </button>
+      <button onClick={deleteCharacter}
+        style={{ width: '100%', padding: '0.75rem', background: '#4B176D', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
+        Delete Character
+      </button>
       {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
-
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
-        <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
-        <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
-        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/personas" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
-        <a href="/profile" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
-      </div>
     </div>
   )
 }
