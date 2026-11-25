@@ -61,8 +61,10 @@ export default function Chat() {
     if (!character) return
     setLoading(true)
     setError('')
-    const prompt = encodeURIComponent(`${character.name}, ${character.description || ''}, ${character.personality || ''}, dark fantasy, detailed`)
-    const imageUrl = `https://image.pollinations.ai/prompt/${prompt}?nologo=true&width=768&height=768`
+    const prompt = encodeURIComponent(
+      `${character.name}, ${character.description || ''}, ${character.personality || ''}, ${character.scenario || ''}, highly detailed portrait matching the character description exactly, dark fantasy style`
+    )
+    const imageUrl = `https://image.pollinations.ai/prompt/${prompt}?nologo=true&width=768&height=1024&enhance=true`
     const imgMsg = { role: 'assistant', content: `![image](${imageUrl})`, character_id: id }
     setMessages(prev => [...prev, imgMsg])
 
