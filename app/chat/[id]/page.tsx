@@ -75,10 +75,8 @@ export default function Chat() {
           'X-Title': 'NightBite'
         },
         body: JSON.stringify({
-          model: 'black-forest-labs/flux-1.1-pro',
-          prompt: promptText,
-          n: 1,
-          size: '1024x1024'
+          model: 'black-forest-labs/flux.2-pro',
+          prompt: promptText
         })
       })
 
@@ -92,7 +90,7 @@ export default function Chat() {
           await supabase.from('messages').insert({ ...imgMsg, user_id: session.user.id })
         }
       } else {
-        setError('Image generation failed: ' + JSON.stringify(data).slice(0, 100))
+        setError('Image generation failed: ' + JSON.stringify(data).slice(0, 120))
       }
     } catch (err: any) {
       setError(err.message)
