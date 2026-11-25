@@ -57,9 +57,19 @@ export default function Chat() {
     setLoading(true)
 
     const { data: { session } } = await supabase.auth.getSession()
-    if (session) {
-      await supabase.from('messages').insert({ ...userMsg, user_id: session.user.id })
+    if (!session) {
+      setError('Not logged in — messages won’t save')
+      setLoading(false)
+      return
     }
+
+    const { error: saveError } = await supabase.from('messages').insert({
+      role: 'user',
+      content: currentInput,
+      character_id: id,
+      user_id: session.user.id
+    })
+    if (saveError) setError('Save error: ' + saveError.message)
 
     const personaText = selectedPersona
       ? `The user is roleplaying as ${selectedPersona.name}. Background: ${selectedPersona.background || ''}. Appearance: ${selectedPersona.appearance || ''}.`
@@ -95,9 +105,14 @@ export default function Chat() {
       const reply = data.choices?.[0]?.message?.content || 'No response'
       const aiMsg = { role: 'assistant', content: reply, character_id: id }
       setMessages(prev => [...prev, aiMsg])
-      if (session) {
-        await supabase.from('messages').insert({ ...aiMsg, user_id: session.user.id })
-      }
+
+      const { error: aiSaveError } = await supabase.from('messages').insert({
+        role: 'assistant',
+        content: reply,
+        character_id: id,
+        user_id: session.user.id
+      })
+      if (aiSaveError) setError('AI save error: ' + aiSaveError.message)
     } catch (err: any) {
       setError(err.message || 'Failed to reach AI')
     }
