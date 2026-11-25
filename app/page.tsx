@@ -28,11 +28,22 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0f', color: '#f2edf5', fontFamily: 'system-ui, sans-serif', paddingBottom: '80px' }}>
       <div style={{ textAlign: 'center', padding: '1rem' }}>
-        <img src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_4425.jpeg" alt="Logo" style={{ width: '100%', maxWidth: '320px' }} />
+        <img
+          src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_4425.jpeg"
+          alt="PrettyKitty’s Playground"
+          style={{ width: '100%', maxWidth: '340px', margin: '0 auto' }}
+        />
+        <img
+          src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_4431.jpeg"
+          alt="Cat and Raven Emblem"
+          style={{ width: '140px', margin: '0.5rem auto', display: 'block' }}
+        />
         {profile && (
-          <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', opacity: 0.8 }}>
-            {profile.avatar_url && <img src={profile.avatar_url} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', verticalAlign: 'middle', marginRight: '0.4rem' }} />}
-            {profile.username || 'Your Profile'}
+          <div style={{ marginTop: '0.4rem', fontSize: '0.9rem', opacity: 0.85 }}>
+            {profile.avatar_url && (
+              <img src={profile.avatar_url} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', verticalAlign: 'middle', marginRight: '0.4rem' }} />
+            )}
+            {profile.username || 'Profile'}
           </div>
         )}
       </div>
@@ -45,7 +56,9 @@ export default function Home() {
                 {char.image_url && <img src={char.image_url} alt={char.name} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />}
                 <div style={{ padding: '0.6rem' }}>
                   <div style={{ fontWeight: 600 }}>{char.name}</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.2rem' }}>{char.description?.slice(0, 60)}...</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.2rem' }}>
+                    {char.description?.slice(0, 70)}...
+                  </div>
                 </div>
               </div>
             </a>
