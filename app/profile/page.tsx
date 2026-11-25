@@ -34,7 +34,7 @@ export default function Profile() {
       setBanner(prof.banner_url || '')
       setAvatar(prof.avatar_url || '')
     }
-    const { data: chars } = await supabase.from('characters').select('*').eq('creator_id', session.user.id)
+    const { data: chars } = await supabase.from('characters').select('*').eq('creator_id', session.user.id).order('created_at', { ascending: false })
     if (chars) setStories(chars)
   }
 
@@ -71,20 +71,20 @@ export default function Profile() {
   return (
     <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px' }}>
       <div style={{
-        height: '160px',
+        height: '140px',
         background: banner ? `url(${banner}) center/cover` : 'rgba(21,18,25,0.5)',
         position: 'relative'
       }}>
-        <div style={{ position: 'absolute', bottom: '-40px', left: '1rem' }}>
-          <img src={avatar || 'https://via.placeholder.com/80'} alt="" style={{ width: '80px', height: '80px', borderRadius: '50%', border: `3px solid ${accent}`, objectFit: 'cover' }} />
+        <div style={{ position: 'absolute', bottom: '-36px', left: '1rem' }}>
+          <img src={avatar || 'https://via.placeholder.com/72'} alt="" style={{ width: '72px', height: '72px', borderRadius: '50%', border: `3px solid ${accent}`, objectFit: 'cover' }} />
         </div>
       </div>
 
-      <div style={{ padding: '3rem 1rem 1rem' }}>
+      <div style={{ padding: '2.8rem 1rem 1rem' }}>
         <h2 style={{ margin: 0, color: accent }}>{username || 'Your Name'}</h2>
-        <p style={{ opacity: 0.7, margin: '0.3rem 0 1rem' }}>{bio || 'No bio yet'}</p>
+        <p style={{ opacity: 0.7, margin: '0.3rem 0 1rem', fontSize: '0.9rem' }}>{bio || 'No bio yet'}</p>
 
-        <div style={{ background: 'rgba(21,18,25,0.55)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '1rem', marginBottom: '1rem' }}>
+        <div style={{ background: 'rgba(21,18,25,0.55)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '1rem', marginBottom: '1.5rem' }}>
           <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)}
             style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
           <textarea placeholder="Bio" value={bio} onChange={e => setBio(e.target.value)}
@@ -99,13 +99,18 @@ export default function Profile() {
           {message && <p style={{ marginTop: '0.5rem', color: accent }}>{message}</p>}
         </div>
 
-        <h3 style={{ color: accent }}>My Stories</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.8rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.8rem' }}>
+          <h3 style={{ color: accent, margin: 0 }}>Characters ({stories.length})</h3>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.8rem' }}>
           {stories.map(s => (
             <a key={s.id} href={`/character/${s.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '12px', overflow: 'hidden' }}>
-                {s.image_url && <img src={s.image_url} alt="" style={{ width: '100%', height: '140px', objectFit: 'cover' }} />}
-                <div style={{ padding: '0.5rem', fontSize: '0.85rem' }}>{s.name}</div>
+              <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(168,85,247,0.2)' }}>
+                {s.image_url && <img src={s.image_url} alt="" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />}
+                <div style={{ padding: '0.6rem' }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{s.name}</div>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.7, marginTop: '0.2rem' }}>{s.description?.slice(0, 50)}...</div>
+                </div>
               </div>
             </a>
           ))}
