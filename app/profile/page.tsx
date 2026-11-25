@@ -10,47 +10,70 @@ const supabase = createClient(
 export default function Profile() {
   const [username, setUsername] = useState('')
   const [bio, setBio] = useState('')
-  const [message, setMessage] = useState('Loading...')
+  const [avatar, setAvatar] = useState<File | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
-    async function check() {
+    async function load() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        setMessage('You are logged in as ' + session.user.email)
         const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
         if (data) {
           setUsername(data.username || '')
           setBio(data.bio || '')
+          setAvatarUrl(data.avatar_url || '')
         }
-      } else {
-        setMessage('Not logged in. Go to /login first, then come back.')
       }
     }
-    check()
+    load()
   }, [])
 
   async function save() {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return setMessage('Log in first')
+    if (!session) return setMessage('Please log in on the login page first, then come back.')
+
+    let finalUrl = avatarUrl
+    if (avatar) {
+      const fileName = `avatar-${Date.now()}.jpg`
+      const { error } = await supabase.storage.from('character-images').upload(fileName, avatar)
+      if (error) return setMessage(error.message)
+      const { data } = supabase.storage.from('character-images').getPublicUrl(fileName)
+      finalUrl = data.publicUrl
+    }
+
     const { error } = await supabase.from('profiles').upsert({
       id: session.user.id,
       username,
-      bio
+      bio,
+      avatar_url: finalUrl
     })
     setMessage(error ? error.message : 'Saved!')
+    if (!error) setAvatarUrl(finalUrl)
   }
 
   return (
     <div style={{ maxWidth: '500px', margin: '2rem auto', padding: '1rem', color: '#f2edf5' }}>
-      <h1 style={{ color: '#9E092B' }}>Profile</h1>
-      <p>{message}</p>
+      <h1 style={{ color: '#9E092B' }}>Edit Profile</h1>
+
+      {avatarUrl && (
+        <img src={avatarUrl} alt="Profile" style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1rem' }} />
+      )}
+
+      <div style={{ margin: '1rem 0' }}>
+        <label style={{ color: '#A855F7' }}>Profile Image</label>
+        <input type="file" accept="image/*" onChange={e => setAvatar(e.target.files?.[0] || null)} style={{ display: 'block', marginTop: '0.5rem', color: '#f2edf5' }} />
+      </div>
+
       <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#f2edf5', border: '1px solid #333', borderRadius: '0.5rem' }} />
       <textarea placeholder="Bio" value={bio} onChange={e => setBio(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#f2edf5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '100px' }} />
-      <button onClick={save} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem' }}>
-        Save
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#f2edf5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '120px' }} />
+
+      <button onClick={save} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
+        Save Profile
       </button>
+      {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
     </div>
   )
 }
