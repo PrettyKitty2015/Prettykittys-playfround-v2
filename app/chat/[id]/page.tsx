@@ -8,6 +8,16 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+function formatMessage(text: string) {
+  const parts = text.split(/(\*[^*]+\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={i} style={{ fontStyle: 'italic', opacity: 0.85 }}>{part.slice(1, -1)}</em>
+    }
+    return <span key={i}>{part}</span>
+  })
+}
+
 export default function Chat() {
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
@@ -58,18 +68,17 @@ export default function Chat() {
 
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
-      setError('Not logged in — messages won’t save')
+      setError('Not logged in')
       setLoading(false)
       return
     }
 
-    const { error: saveError } = await supabase.from('messages').insert({
+    await supabase.from('messages').insert({
       role: 'user',
       content: currentInput,
       character_id: id,
       user_id: session.user.id
     })
-    if (saveError) setError('Save error: ' + saveError.message)
 
     const personaText = selectedPersona
       ? `The user is roleplaying as ${selectedPersona.name}. Background: ${selectedPersona.background || ''}. Appearance: ${selectedPersona.appearance || ''}.`
@@ -87,7 +96,12 @@ export default function Chat() {
         body: JSON.stringify({
           model: 'meta-llama/llama-3.1-8b-instruct',
           messages: [
-            { role: 'system', content: `You are ${character?.name || 'a character'}. Personality: ${character?.personality || ''}. Description: ${character?.description || ''}. Scenario: ${character?.scenario || ''}. ${personaText} Stay in character and respond to the user's persona.` },
+            { 
+              role: 'system', 
+              content: `You are ${character?.name || 'a character'}. Personality: ${character?.personality || ''}. Description: ${character?.description || ''}. Scenario: ${character?.scenario || ''}. ${personaText}
+
+Always write in third person. Use *asterisks* for actions and narration. Put spoken dialogue in quotes. Example: *He smiles softly.* "Hello there." Stay in character.` 
+            },
             ...messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content: currentInput }
           ]
@@ -96,7 +110,7 @@ export default function Chat() {
 
       if (!res.ok) {
         const errText = await res.text()
-        setError(`API Error: ${res.status} - ${errText.slice(0, 150)}`)
+        setError(`API Error: ${res.status}`)
         setLoading(false)
         return
       }
@@ -106,13 +120,12 @@ export default function Chat() {
       const aiMsg = { role: 'assistant', content: reply, character_id: id }
       setMessages(prev => [...prev, aiMsg])
 
-      const { error: aiSaveError } = await supabase.from('messages').insert({
+      await supabase.from('messages').insert({
         role: 'assistant',
         content: reply,
         character_id: id,
         user_id: session.user.id
       })
-      if (aiSaveError) setError('AI save error: ' + aiSaveError.message)
     } catch (err: any) {
       setError(err.message || 'Failed to reach AI')
     }
@@ -135,7 +148,6 @@ export default function Chat() {
       {showPersonaPicker && (
         <div style={{ background: '#151219', padding: '0.8rem', borderBottom: '1px solid #2a2a35' }}>
           <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>Choose a Persona:</div>
-          {personas.length === 0 && <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>No personas yet. Create one first.</div>}
           {personas.map(p => (
             <div key={p.id} onClick={() => { setSelectedPersona(p); setShowPersonaPicker(false) }}
               style={{ padding: '0.5rem', borderRadius: '8px', background: selectedPersona?.id === p.id ? '#4B176D' : '#09090D', marginBottom: '0.3rem', cursor: 'pointer' }}>
@@ -154,9 +166,10 @@ export default function Chat() {
               padding: '0.7rem 1rem',
               borderRadius: '16px',
               background: m.role === 'user' ? '#4B176D' : '#151219',
-              border: '1px solid #2a2a35'
+              border: '1px solid #2a2a35',
+              lineHeight: '1.5'
             }}>
-              {m.content}
+              {formatMessage(m.content)}
             </div>
           </div>
         ))}
