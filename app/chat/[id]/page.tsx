@@ -59,10 +59,10 @@ export default function Chat() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama-3.1-70b-versatile',
+          model: 'gemma2-9b-it',
           messages: [
-            { role: 'system', content: `You are ${character?.name || 'a character'}. ${character?.personality || ''} ${character?.description || ''} ${character?.scenario || ''}` },
-            ...messages.map(m => ({ role: m.role, content: m.content })),
+            { role: 'system', content: `You are ${character?.name || 'a character'}. Personality: ${character?.personality || ''}. Description: ${character?.description || ''}. Scenario: ${character?.scenario || ''}. Stay in character.` },
+            ...messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content: currentInput }
           ]
         })
@@ -70,7 +70,7 @@ export default function Chat() {
 
       if (!res.ok) {
         const errText = await res.text()
-        setError(`API Error: ${res.status} - ${errText.slice(0, 120)}`)
+        setError(`API Error: ${res.status} - ${errText.slice(0, 150)}`)
         setLoading(false)
         return
       }
