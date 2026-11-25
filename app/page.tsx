@@ -49,25 +49,12 @@ export default function Home() {
     <div style={{ minHeight: '100vh', background: '#09090D', color: '#F2EDF5', fontFamily: 'system-ui, sans-serif', paddingBottom: '90px' }}>
       <div style={{ textAlign: 'center', padding: '1.5rem 1rem 0.8rem' }}>
         <img
-          src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_4425.jpeg"
-          alt="PrettyKitty’s Playground"
+          src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0109.jpeg"
+          alt="NightBite"
           style={{ width: '100%', maxWidth: '280px', margin: '0 auto' }}
         />
-        <div style={{
-          fontFamily: "'Cinzel Decorative', serif",
-          fontSize: '2.2rem',
-          fontWeight: 700,
-          background: 'linear-gradient(180deg, #A855F7 0%, #9E092B 50%, #4B176D 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          textShadow: '0 2px 8px rgba(158, 9, 43, 0.6)',
-          letterSpacing: '0.05em',
-          marginTop: '0.3rem'
-        }}>
-          NightBite
-        </div>
         {profile?.username && (
-          <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.4rem' }}>
+          <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.6rem' }}>
             {profile.avatar_url && <img src={profile.avatar_url} alt="" style={{ width: '22px', height: '22px', borderRadius: '50%', verticalAlign: 'middle', marginRight: '0.3rem' }} />}
             {profile.username}
           </div>
