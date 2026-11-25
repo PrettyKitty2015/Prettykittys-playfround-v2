@@ -22,7 +22,6 @@ export default function Home() {
         const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
         if (prof) setProfile(prof)
 
-        // Recent chats (unique characters the user has messaged)
         const { data: msgs } = await supabase
           .from('messages')
           .select('character_id, characters(name, image_url)')
@@ -60,6 +59,9 @@ export default function Home() {
             {profile.username}
           </div>
         )}
+        <div style={{ marginTop: '0.6rem' }}>
+          <a href="/login" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.9rem' }}>Login / Sign Up</a>
+        </div>
       </div>
 
       {recentChats.length > 0 && (
@@ -97,10 +99,12 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.7rem 0 1rem', borderRadius: '16px 16px 0 0' }}>
-        <a href="/" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600 }}>Home</a>
-        <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.8rem' }}>Create</a>
-        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.8rem' }}>Profile</a>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
+        <a href="/" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
+        <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
+        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
+        <a href="/login" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🔑<br/>Login</a>
+        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Profile</a>
       </div>
     </div>
   )
