@@ -12,72 +12,112 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null)
   const [username, setUsername] = useState('')
   const [bio, setBio] = useState('')
+  const [accent, setAccent] = useState('#A855F7')
+  const [banner, setBanner] = useState('')
+  const [avatar, setAvatar] = useState('')
+  const [stories, setStories] = useState<any[]>([])
   const [message, setMessage] = useState('')
   const router = useRouter()
 
-  useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/login')
-        return
-      }
-      const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
-      if (data) {
-        setProfile(data)
-        setUsername(data.username || '')
-        setBio(data.bio || '')
-      }
+  async function load() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      router.push('/login')
+      return
     }
-    load()
-  }, [router])
+    const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+    if (prof) {
+      setProfile(prof)
+      setUsername(prof.username || '')
+      setBio(prof.bio || '')
+      setAccent(prof.accent_color || '#A855F7')
+      setBanner(prof.banner_url || '')
+      setAvatar(prof.avatar_url || '')
+    }
+    const { data: chars } = await supabase.from('characters').select('*').eq('creator_id', session.user.id)
+    if (chars) setStories(chars)
+  }
+
+  useEffect(() => { load() }, [])
 
   async function save() {
+    setMessage('Saving...')
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
     const { error } = await supabase.from('profiles').upsert({
       id: session.user.id,
       username,
-      bio
+      bio,
+      accent_color: accent,
+      banner_url: banner,
+      avatar_url: avatar
     })
     if (error) setMessage(error.message)
     else setMessage('Saved!')
   }
 
-  async function logout() {
-    await supabase.auth.signOut()
-    router.push('/login')
+  async function uploadImage(e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const fileName = `${Date.now()}-${file.name}`
+    const { error } = await supabase.storage.from('character-images').upload(fileName, file)
+    if (!error) {
+      const { data } = supabase.storage.from('character-images').getPublicUrl(fileName)
+      if (type === 'avatar') setAvatar(data.publicUrl)
+      else setBanner(data.publicUrl)
+    }
   }
 
   return (
-    <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
-      <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>Profile</h1>
-
-      {profile?.avatar_url && (
-        <div style={{ textAlign: 'center', margin: '1rem 0' }}>
-          <img src={profile.avatar_url} alt="" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }} />
+    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px' }}>
+      <div style={{
+        height: '160px',
+        background: banner ? `url(${banner}) center/cover` : 'rgba(21,18,25,0.5)',
+        position: 'relative'
+      }}>
+        <div style={{ position: 'absolute', bottom: '-40px', left: '1rem' }}>
+          <img src={avatar || 'https://via.placeholder.com/80'} alt="" style={{ width: '80px', height: '80px', borderRadius: '50%', border: `3px solid ${accent}`, objectFit: 'cover' }} />
         </div>
-      )}
+      </div>
 
-      <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-      <textarea placeholder="Bio" value={bio} onChange={e => setBio(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
+      <div style={{ padding: '3rem 1rem 1rem' }}>
+        <h2 style={{ margin: 0, color: accent }}>{username || 'Your Name'}</h2>
+        <p style={{ opacity: 0.7, margin: '0.3rem 0 1rem' }}>{bio || 'No bio yet'}</p>
 
-      <button onClick={save} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
-        Save Profile
-      </button>
-      <button onClick={logout} style={{ width: '100%', padding: '0.75rem', background: '#4B176D', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
-        Log Out
-      </button>
-      {message && <p style={{ color: '#A855F7', textAlign: 'center', marginTop: '1rem' }}>{message}</p>}
+        <div style={{ background: 'rgba(21,18,25,0.55)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '1rem', marginBottom: '1rem' }}>
+          <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)}
+            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
+          <textarea placeholder="Bio" value={bio} onChange={e => setBio(e.target.value)}
+            style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '60px' }} />
+          <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Accent Color</label>
+          <input type="color" value={accent} onChange={e => setAccent(e.target.value)} style={{ width: '100%', height: '40px', margin: '0.3rem 0', border: 'none', borderRadius: '0.5rem' }} />
+          <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Profile Picture</label>
+          <input type="file" accept="image/*" onChange={e => uploadImage(e, 'avatar')} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
+          <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Banner</label>
+          <input type="file" accept="image/*" onChange={e => uploadImage(e, 'banner')} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
+          <button onClick={save} style={{ width: '100%', padding: '0.7rem', background: accent, color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>Save Profile</button>
+          {message && <p style={{ marginTop: '0.5rem', color: accent }}>{message}</p>}
+        </div>
+
+        <h3 style={{ color: accent }}>My Stories</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.8rem' }}>
+          {stories.map(s => (
+            <a key={s.id} href={`/character/${s.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '12px', overflow: 'hidden' }}>
+                {s.image_url && <img src={s.image_url} alt="" style={{ width: '100%', height: '140px', objectFit: 'cover' }} />}
+                <div style={{ padding: '0.5rem', fontSize: '0.85rem' }}>{s.name}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
 
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
         <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
         <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
         <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
         <a href="/personas" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
-        <a href="/profile" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
+        <a href="/profile" style={{ color: accent, textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
       </div>
     </div>
   )
