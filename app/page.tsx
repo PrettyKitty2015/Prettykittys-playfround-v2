@@ -46,7 +46,7 @@ export default function Home() {
   }, [])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#09090D', color: '#F2EDF5', fontFamily: 'system-ui, sans-serif', paddingBottom: '90px' }}>
+    <div style={{ minHeight: '100vh', color: '#F2EDF5', fontFamily: 'system-ui, sans-serif', paddingBottom: '90px' }}>
       <div style={{ textAlign: 'center', padding: '1.5rem 1rem 0.8rem' }}>
         <img
           src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0109.jpeg"
@@ -87,9 +87,9 @@ export default function Home() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.8rem' }}>
           {characters.map(char => (
             <div key={char.id} style={{ 
-              background: 'rgba(21, 18, 25, 0.7)', 
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(168, 85, 247, 0.2)',
+              background: 'rgba(21, 18, 25, 0.65)', 
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(168, 85, 247, 0.22)',
               borderRadius: '16px',
               overflow: 'hidden'
             }}>
