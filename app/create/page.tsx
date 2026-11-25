@@ -29,8 +29,9 @@ export default function CreateCharacter() {
       creator_id: user.id
     })
 
-    if (error) setMessage(error.message)
-    else {
+    if (error) {
+      setMessage(error.message)
+    } else {
       setMessage('Character created!')
       setTimeout(() => router.push('/'), 1500)
     }
@@ -39,15 +40,34 @@ export default function CreateCharacter() {
   return (
     <div style={{ maxWidth: '500px', margin: '2rem auto', padding: '1rem' }}>
       <h1 style={{ color: '#9E092B' }}>Create Character</h1>
-      <input placeholder="Character Name" value={name} onChange={e => setName(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-      <textarea placeholder="Description" value={description} onChange={e => setDescription(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '100px' }} />
-      <textarea placeholder="Personality" value={personality} onChange={e => setPersonality(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '100px' }} />
-      <button onClick={saveCharacter}
-        style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
+      <input
+        placeholder="Character Name"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }}
+      />
+      <textarea
+        placeholder="Description"
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '100px' }}
+      />
+      <textarea
+        placeholder="Personality"
+        value={personality}
+        onChange={e => setPersonality(e.target.value)}
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '100px' }}
+      />
+      <button
+        onClick={saveCharacter}
+        style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}
+      >
         Save Character
       </button>
       {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
-      <p style={{ marginTop: '1rem' }}><a href="/" style={{ color: '#A855F
+      <p style={{ marginTop: '1rem' }}>
+        <a href="/" style={{ color: '#A855F7' }}>Back to Home</a>
+      </p>
+    </div>
+  )
+}
