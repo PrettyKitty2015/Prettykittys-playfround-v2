@@ -33,16 +33,20 @@ export default function Login() {
   }
 
   return (
-    <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>NightBite</h1>
+    <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      <img
+        src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_4425.jpeg"
+        alt="NightBite"
+        style={{ width: '100%', maxWidth: '320px', marginBottom: '2rem' }}
+      />
       <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
+        style={{ width: '100%', maxWidth: '320px', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
       <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-      <button onClick={signIn} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
+        style={{ width: '100%', maxWidth: '320px', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
+      <button onClick={signIn} style={{ width: '100%', maxWidth: '320px', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
         Login
       </button>
-      <button onClick={signUp} style={{ width: '100%', padding: '0.75rem', background: '#4B176D', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
+      <button onClick={signUp} style={{ width: '100%', maxWidth: '320px', padding: '0.75rem', background: '#4B176D', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
         Sign Up
       </button>
       {message && <p style={{ color: '#A855F7', textAlign: 'center', marginTop: '1rem' }}>{message}</p>}
