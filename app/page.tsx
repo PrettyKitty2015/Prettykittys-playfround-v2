@@ -54,9 +54,9 @@ export default function Home() {
     <div style={{ minHeight: '100vh', color: '#F2EDF5', fontFamily: 'system-ui, sans-serif', paddingBottom: '90px' }}>
       <div style={{ textAlign: 'center', padding: '1.5rem 1rem 0.8rem' }}>
         <img
-          src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0109.jpeg"
+          src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0136.png"
           alt="NightBite"
-          style={{ width: '100%', maxWidth: '280px', margin: '0 auto', mixBlendMode: 'screen' }}
+          style={{ width: '100%', maxWidth: '280px', margin: '0 auto' }}
         />
         {profile?.username && (
           <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.6rem' }}>
