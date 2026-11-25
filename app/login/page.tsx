@@ -35,9 +35,9 @@ export default function Login() {
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
       <img
-        src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_4425.jpeg"
+        src="https://i.imgur.com/your-nightbite-logo.png"
         alt="NightBite"
-        style={{ width: '100%', maxWidth: '320px', marginBottom: '2rem' }}
+        style={{ width: '100%', maxWidth: '340px', marginBottom: '2.5rem' }}
       />
       <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)}
         style={{ width: '100%', maxWidth: '320px', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
