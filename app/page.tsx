@@ -24,68 +24,68 @@ export default function Home() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#09090D',
-      color: '#F2EDF5',
-      padding: '1rem',
+      background: '#0a0a0f',
+      color: '#f2edf5',
       fontFamily: 'system-ui, sans-serif'
     }}>
-      <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
+      {/* Header / Logo */}
+      <div style={{ textAlign: 'center', padding: '1.5rem 1rem 1rem' }}>
         <img
           src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_4425.jpeg"
           alt="PrettyKitty’s Playground"
-          style={{ width: '100%', maxWidth: '420px', margin: '1rem auto 0.5rem', display: 'block' }}
+          style={{ width: '100%', maxWidth: '380px', margin: '0 auto', display: 'block' }}
         />
-
-        <p style={{ marginBottom: '2rem', opacity: 0.9 }}>
+        <p style={{ margin: '0.75rem 0 0', opacity: 0.85, fontSize: '0.95rem' }}>
           Where imagination runs wild, fantasies come alive, and every story has a little bite.
         </p>
+      </div>
 
-        <div style={{ marginBottom: '2.5rem' }}>
-          <a href="/create" style={{
-            background: '#9E092B',
-            color: '#fff',
-            padding: '0.9rem 2rem',
-            borderRadius: '999px',
-            textDecoration: 'none',
-            fontWeight: 600,
-            marginRight: '1rem'
-          }}>
-            Create Character
-          </a>
-          <a href="/login" style={{ color: '#A855F7', textDecoration: 'none' }}>
-            Login
-          </a>
-        </div>
+      {/* Action buttons */}
+      <div style={{ textAlign: 'center', padding: '0 1rem 1.5rem' }}>
+        <a href="/create" style={{
+          background: '#9E092B',
+          color: '#fff',
+          padding: '0.85rem 1.8rem',
+          borderRadius: '999px',
+          textDecoration: 'none',
+          fontWeight: 600,
+          marginRight: '0.75rem',
+          display: 'inline-block'
+        }}>
+          Create
+        </a>
+        <a href="/login" style={{
+          color: '#A855F7',
+          textDecoration: 'none',
+          fontWeight: 500
+        }}>
+          Login
+        </a>
+      </div>
 
-        <h2 style={{ textAlign: 'left', marginBottom: '1rem' }}>Characters</h2>
+      {/* Character grid */}
+      <div style={{ padding: '0 1rem 2rem' }}>
+        <h2 style={{ fontSize: '1.25rem', margin: '0 0 1rem 0' }}>Characters</h2>
 
-        {characters.length === 0 && <p>No characters yet. Create one!</p>}
+        {characters.length === 0 && (
+          <p style={{ textAlign: 'center', opacity: 0.6 }}>No characters yet.</p>
+        )}
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '1.25rem',
-          textAlign: 'left'
+          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+          gap: '0.75rem'
         }}>
           {characters.map((char) => (
-            <div key={char.id} style={{
-              background: '#151219',
-              border: '1px solid #333',
-              borderRadius: '1rem',
-              overflow: 'hidden'
-            }}>
-              {char.image_url && (
-                <img src={char.image_url} alt={char.name} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
-              )}
-              <div style={{ padding: '1rem' }}>
-                <h3 style={{ color: '#A855F7', margin: '0 0 0.5rem 0' }}>{char.name}</h3>
-                <p style={{ margin: '0.25rem 0' }}>{char.description}</p>
-                <a href={`/edit/${char.id}`} style={{ color: '#9E092B', fontSize: '0.9rem' }}>Edit</a>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
+            <a
+              key={char.id}
+              href={`/edit/${char.id}`}
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              <div style={{
+                background: '#151219',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                border: '1px solid #2a2a35'
+              }}>
+                {char.image_url ?
