@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +21,9 @@ function formatMessage(text: string) {
 export default function Chat() {
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
-  const [character, setCharacter] = useState<any>(null)
+  const [characters, setCharacters] = useState<any[]>([])
+  const [story, setStory] = useState<any>(null)
+  const [activeCharacter, setActiveCharacter] = useState<any>(null)
   const [personas, setPersonas] = useState<any[]>([])
   const [selectedPersona, setSelectedPersona] = useState<any>(null)
   const [showPersonaPicker, setShowPersonaPicker] = useState(false)
@@ -29,13 +31,26 @@ export default function Chat() {
   const [error, setError] = useState('')
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const id = params.id as string
+  const chatId = searchParams.get('chat') || id
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function load() {
       const { data: char } = await supabase.from('characters').select('*').eq('id', id).single()
-      setCharacter(char)
+      if (char?.story_id) {
+        const { data: storyData } = await supabase.from('stories').select('*').eq('id', char.story_id).single()
+        setStory(storyData)
+        const { data: storyChars } = await supabase.from('characters').select('*').eq('story_id', char.story_id)
+        if (storyChars) {
+          setCharacters(storyChars)
+          setActiveCharacter(storyChars[0])
+        }
+      } else {
+        setCharacters([char])
+        setActiveCharacter(char)
+      }
 
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
@@ -46,65 +61,21 @@ export default function Chat() {
       const { data: msgs } = await supabase
         .from('messages')
         .select('*')
-        .eq('character_id', id)
+        .eq('chat_id', chatId)
         .order('created_at', { ascending: true })
       if (msgs) setMessages(msgs)
     }
     if (id) load()
-  }, [id])
+  }, [id, chatId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function generateImage() {
-    if (!character) return
-    const userPrompt = prompt('Extra details for the image (or leave blank):') || ''
-    setLoading(true)
-    setError('')
-
-    const promptText = `${character.name}, ${character.appearance || ''}, ${character.description || ''}, ${character.personality || ''}, ${userPrompt}, highly detailed portrait, dark fantasy`
-
-    try {
-      const res = await fetch('https://openrouter.ai/api/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://prettykittys-playground.vercel.app',
-          'X-Title': 'NightBite'
-        },
-        body: JSON.stringify({
-          model: 'black-forest-labs/flux.2-pro',
-          prompt: promptText
-        })
-      })
-
-      const data = await res.json()
-      let imageUrl = data.data?.[0]?.url
-      if (!imageUrl && data.data?.[0]?.b64_json) {
-        imageUrl = `data:image/png;base64,${data.data[0].b64_json}`
-      }
-      if (imageUrl) {
-        const imgMsg = { role: 'assistant', content: `![image](${imageUrl})`, character_id: id }
-        setMessages(prev => [...prev, imgMsg])
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          await supabase.from('messages').insert({ ...imgMsg, user_id: session.user.id })
-        }
-      } else {
-        setError('Image generation failed: ' + JSON.stringify(data).slice(0, 120))
-      }
-    } catch (err: any) {
-      setError(err.message)
-    }
-    setLoading(false)
-  }
-
   async function send() {
-    if (!input.trim() || loading) return
+    if (!input.trim() || loading || !activeCharacter) return
     setError('')
-    const userMsg = { role: 'user', content: input, character_id: id }
+    const userMsg = { role: 'user', content: input, character_id: activeCharacter.id, chat_id: chatId }
     setMessages(prev => [...prev, userMsg])
     const currentInput = input
     setInput('')
@@ -120,12 +91,14 @@ export default function Chat() {
     await supabase.from('messages').insert({
       role: 'user',
       content: currentInput,
-      character_id: id,
+      character_id: activeCharacter.id,
+      chat_id: chatId,
       user_id: session.user.id
     })
 
+    const allCharInfo = characters.map(c => `${c.name}: ${c.description || ''} ${c.personality || ''} ${c.appearance || ''}`).join('\n')
     const personaText = selectedPersona
-      ? `The user is roleplaying as ${selectedPersona.name}. Background: ${selectedPersona.background || ''}. Appearance: ${selectedPersona.appearance || ''}.`
+      ? `The user is roleplaying as ${selectedPersona.name}. Background: ${selectedPersona.background || ''}.`
       : ''
 
     try {
@@ -142,11 +115,14 @@ export default function Chat() {
           messages: [
             { 
               role: 'system', 
-              content: `You are ${character?.name || 'a character'}. Personality: ${character?.personality || ''}. Description: ${character?.description || ''}. Scenario: ${character?.scenario || ''}. ${personaText}
+              content: `Story: ${story?.title || ''} - ${story?.description || ''}
+Characters:
+${allCharInfo}
+${personaText}
 
-Always write in third person. Use *asterisks* for actions and narration. Put spoken dialogue in quotes. Example: *He smiles softly.* "Hello there." Stay in character.` 
+You are roleplaying in this story. Respond as the characters appropriately. Always write in third person. Use *asterisks* for actions. Put dialogue in quotes. Stay consistent with the story and characters.` 
             },
-            ...messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+            ...messages.slice(-12).map(m => ({ role: m.role, content: m.content })),
             { role: 'user', content: currentInput }
           ]
         })
@@ -160,13 +136,14 @@ Always write in third person. Use *asterisks* for actions and narration. Put spo
 
       const data = await res.json()
       const reply = data.choices?.[0]?.message?.content || 'No response'
-      const aiMsg = { role: 'assistant', content: reply, character_id: id }
+      const aiMsg = { role: 'assistant', content: reply, character_id: activeCharacter.id, chat_id: chatId }
       setMessages(prev => [...prev, aiMsg])
 
       await supabase.from('messages').insert({
         role: 'assistant',
         content: reply,
-        character_id: id,
+        character_id: activeCharacter.id,
+        chat_id: chatId,
         user_id: session.user.id
       })
     } catch (err: any) {
@@ -177,27 +154,37 @@ Always write in third person. Use *asterisks* for actions and narration. Put spo
 
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', display: 'flex', flexDirection: 'column', paddingBottom: '70px' }}>
-      <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid #2a2a35', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.2rem', cursor: 'pointer' }}>←</button>
-        {character?.image_url && <img src={character.image_url} alt="" style={{ width: '42px', height: '42px', borderRadius: '10px', objectFit: 'cover' }} />}
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontFamily: "'Cinzel Decorative', serif" }}>{character?.name || 'Chat'}</div>
-          <div onClick={() => setShowPersonaPicker(!showPersonaPicker)} style={{ fontSize: '0.75rem', color: '#A855F7', cursor: 'pointer' }}>
-            {selectedPersona ? `Playing as: ${selectedPersona.name}` : 'Select Persona'}
+      <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid #2a2a35' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.2rem' }}>←</button>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600 }}>{story?.title || activeCharacter?.name || 'Chat'}</div>
+            <div onClick={() => setShowPersonaPicker(!showPersonaPicker)} style={{ fontSize: '0.75rem', color: '#A855F7' }}>
+              {selectedPersona ? `Playing as: ${selectedPersona.name}` : 'Select Persona'}
+            </div>
           </div>
         </div>
+        {characters.length > 1 && (
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem', overflowX: 'auto' }}>
+            {characters.map(c => (
+              <div key={c.id} onClick={() => setActiveCharacter(c)}
+                style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: activeCharacter?.id === c.id ? '#4B176D' : '#151219', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+                {c.name}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {showPersonaPicker && (
         <div style={{ background: '#151219', padding: '0.8rem', borderBottom: '1px solid #2a2a35' }}>
-          <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>Choose a Persona:</div>
           {personas.map(p => (
             <div key={p.id} onClick={() => { setSelectedPersona(p); setShowPersonaPicker(false) }}
-              style={{ padding: '0.5rem', borderRadius: '8px', background: selectedPersona?.id === p.id ? '#4B176D' : '#09090D', marginBottom: '0.3rem', cursor: 'pointer' }}>
+              style={{ padding: '0.5rem', borderRadius: '8px', background: selectedPersona?.id === p.id ? '#4B176D' : '#09090D', marginBottom: '0.3rem' }}>
               {p.name}
             </div>
           ))}
-          <a href="/personas" style={{ color: '#A855F7', fontSize: '0.8rem' }}>+ Create New Persona</a>
+          <a href="/personas" style={{ color: '#A855F7', fontSize: '0.8rem' }}>+ Create Persona</a>
         </div>
       )}
 
@@ -212,11 +199,7 @@ Always write in third person. Use *asterisks* for actions and narration. Put spo
               border: '1px solid #2a2a35',
               lineHeight: '1.5'
             }}>
-              {m.content.startsWith('![image]') ? (
-                <img src={m.content.match(/\((.*?)\)/)?.[1]} alt="" style={{ maxWidth: '100%', borderRadius: '12px' }} />
-              ) : (
-                formatMessage(m.content)
-              )}
+              {formatMessage(m.content)}
             </div>
           </div>
         ))}
@@ -234,7 +217,6 @@ Always write in third person. Use *asterisks* for actions and narration. Put spo
             placeholder="Type a message..."
             style={{ flex: 1, padding: '0.7rem', borderRadius: '12px', border: '1px solid #333', background: '#151219', color: '#F2EDF5' }}
           />
-          <button onClick={generateImage} style={{ padding: '0 0.7rem', background: '#4B176D', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '0.75rem' }}>Image</button>
           <button onClick={send} style={{ padding: '0 1rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '12px' }}>Send</button>
         </div>
       </div>
