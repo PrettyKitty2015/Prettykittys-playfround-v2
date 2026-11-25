@@ -52,20 +52,23 @@ export default function CreateCharacter() {
 
   return (
     <div style={{ maxWidth: '520px', margin: '1.5rem auto', padding: '1rem', color: '#F2EDF5' }}>
-      <h1 style={{ color: '#9E092B', textAlign: 'center' }}>Create Character</h1>
+      <h1 style={{ 
+        color: '#9E092B', 
+        textAlign: 'center', 
+        fontFamily: "'Cinzel Decorative', serif",
+        fontSize: '2.4rem',
+        fontWeight: 700,
+        marginBottom: '1.5rem'
+      }}>
+        Create Character
+      </h1>
 
-      <input placeholder="Character Name *" value={name} onChange={e => setName(e.target.value)}
-        style={inputStyle} />
-      <textarea placeholder="Description / Bio" value={description} onChange={e => setDescription(e.target.value)}
-        style={{ ...inputStyle, minHeight: '80px' }} />
-      <textarea placeholder="Personality *" value={personality} onChange={e => setPersonality(e.target.value)}
-        style={{ ...inputStyle, minHeight: '100px' }} />
-      <textarea placeholder="Scenario / Setting" value={scenario} onChange={e => setScenario(e.target.value)}
-        style={{ ...inputStyle, minHeight: '80px' }} />
-      <textarea placeholder="First Message (opening message from the character)" value={firstMessage} onChange={e => setFirstMessage(e.target.value)}
-        style={{ ...inputStyle, minHeight: '100px' }} />
-      <input placeholder="Tags (comma separated)" value={tags} onChange={e => setTags(e.target.value)}
-        style={inputStyle} />
+      <input placeholder="Character Name *" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
+      <textarea placeholder="Description / Bio" value={description} onChange={e => setDescription(e.target.value)} style={{ ...inputStyle, minHeight: '80px' }} />
+      <textarea placeholder="Personality *" value={personality} onChange={e => setPersonality(e.target.value)} style={{ ...inputStyle, minHeight: '100px' }} />
+      <textarea placeholder="Scenario / Setting" value={scenario} onChange={e => setScenario(e.target.value)} style={{ ...inputStyle, minHeight: '80px' }} />
+      <textarea placeholder="First Message (opening message from the character)" value={firstMessage} onChange={e => setFirstMessage(e.target.value)} style={{ ...inputStyle, minHeight: '100px' }} />
+      <input placeholder="Tags (comma separated)" value={tags} onChange={e => setTags(e.target.value)} style={inputStyle} />
 
       <label style={{ display: 'block', margin: '1rem 0', color: '#A855F7' }}>
         Character Image
