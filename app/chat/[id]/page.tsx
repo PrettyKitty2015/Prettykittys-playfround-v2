@@ -59,7 +59,7 @@ export default function Chat() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: 'llama-3.1-70b-versatile',
           messages: [
             { role: 'system', content: `You are ${character?.name || 'a character'}. ${character?.personality || ''} ${character?.description || ''} ${character?.scenario || ''}` },
             ...messages.map(m => ({ role: m.role, content: m.content })),
