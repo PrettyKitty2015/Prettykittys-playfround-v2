@@ -31,7 +31,6 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'radial-gradient(ellipse at center, rgba(75, 23, 109, 0.35) 0%, #09090D 65%)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -41,13 +40,13 @@ export default function Login() {
       <img
         src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0109.jpeg"
         alt="NightBite"
-        style={{ width: '100%', maxWidth: '320px', marginBottom: '2rem' }}
+        style={{ width: '100%', maxWidth: '320px', marginBottom: '2rem', mixBlendMode: 'screen' }}
       />
 
       <div style={{
         width: '100%',
         maxWidth: '380px',
-        background: 'rgba(21, 18, 25, 0.65)',
+        background: 'rgba(21, 18, 25, 0.6)',
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(168, 85, 247, 0.25)',
         borderRadius: '20px',
@@ -62,14 +61,14 @@ export default function Login() {
           placeholder="Email"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#09090D', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.6rem' }}
+          style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.6rem' }}
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={e => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#09090D', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.6rem' }}
+          style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.6rem' }}
         />
 
         <button onClick={handleAuth}
