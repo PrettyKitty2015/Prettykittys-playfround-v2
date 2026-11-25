@@ -38,9 +38,9 @@ export default function Login() {
       padding: '1.5rem'
     }}>
       <img
-        src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0109.jpeg"
+        src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0136.png"
         alt="NightBite"
-        style={{ width: '100%', maxWidth: '320px', marginBottom: '2rem', mixBlendMode: 'screen' }}
+        style={{ width: '100%', maxWidth: '320px', marginBottom: '2rem' }}
       />
 
       <div style={{
