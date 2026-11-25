@@ -97,7 +97,7 @@ export default function CreateCharacter() {
       first_message: firstMessage,
       tags: tagsArray.length > 0 ? tagsArray : null,
       image_url: imageUrl,
-      user_id: session.user.id
+      creator_id: session.user.id
     })
 
     if (error) {
