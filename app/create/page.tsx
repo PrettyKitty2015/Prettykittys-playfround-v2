@@ -110,6 +110,10 @@ export default function CreateCharacter() {
 
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
+      <div style={{ padding: '0.5rem 0', display: 'flex', alignItems: 'center' }}>
+        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.1rem', cursor: 'pointer' }}>← Back</button>
+      </div>
+
       <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>Create Character</h1>
 
       <input placeholder="Name" value={name} onChange={e => setName(e.target.value)}
