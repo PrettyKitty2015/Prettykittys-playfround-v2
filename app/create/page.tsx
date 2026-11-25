@@ -14,8 +14,7 @@ export default function CreateCharacter() {
   const [description, setDescription] = useState('')
   const [personality, setPersonality] = useState('')
   const [scenario, setScenario] = useState('')
-  const [firstMessage, setFirstMessage] = useState('')
-  const [tags, setTags] = useState('')
+  const [appearance, setAppearance] = useState('')
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -40,9 +39,9 @@ export default function CreateCharacter() {
     const image = new Image()
     image.src = imageSrc
     await new Promise(resolve => image.onload = resolve)
-
     const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')!
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
     canvas.width = croppedAreaPixels.width
     canvas.height = croppedAreaPixels.height
     ctx.drawImage(
@@ -56,21 +55,19 @@ export default function CreateCharacter() {
       croppedAreaPixels.width,
       croppedAreaPixels.height
     )
-    return new Promise<Blob>((resolve) => {
-      canvas.toBlob(blob => resolve(blob!), 'image/jpeg', 0.9)
-    })
+    return new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
   }
 
   async function saveCharacter() {
-    setMessage('')
+    setMessage('Saving...')
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
-      setMessage('Please log in first')
+      setMessage('Not logged in')
       return
     }
 
     let imageUrl = null
-    if (imageSrc) {
+    if (imageSrc && croppedAreaPixels) {
       const blob = await getCroppedImg()
       if (blob) {
         const fileName = `${Date.now()}.jpg`
@@ -84,25 +81,18 @@ export default function CreateCharacter() {
       }
     }
 
-    const tagsArray = tags
-      .split(',')
-      .map(t => t.trim())
-      .filter(t => t.length > 0)
-
     const { error } = await supabase.from('characters').insert({
       name,
       description,
       personality,
       scenario,
-      first_message: firstMessage,
-      tags: tagsArray.length > 0 ? tagsArray : null,
+      appearance,
       image_url: imageUrl,
       creator_id: session.user.id
     })
 
-    if (error) {
-      setMessage(error.message)
-    } else {
+    if (error) setMessage(error.message)
+    else {
       setMessage('Character created!')
       setTimeout(() => router.push('/'), 1000)
     }
@@ -110,32 +100,20 @@ export default function CreateCharacter() {
 
   return (
     <div style={{ background: '#09090D', color: '#F2EDF5', minHeight: '100vh', padding: '1rem', paddingBottom: '90px' }}>
-      <div style={{ padding: '0.5rem 0', display: 'flex', alignItems: 'center' }}>
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.1rem', cursor: 'pointer' }}>← Back</button>
-      </div>
-
       <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>Create Character</h1>
 
       <input placeholder="Name" value={name} onChange={e => setName(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-
-      <textarea placeholder="Description / Bio" value={description} onChange={e => setDescription(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
-
+      <textarea placeholder="Description" value={description} onChange={e => setDescription(e.target.value)}
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '70px' }} />
       <textarea placeholder="Personality" value={personality} onChange={e => setPersonality(e.target.value)}
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '70px' }} />
+      <textarea placeholder="Scenario / Intro" value={scenario} onChange={e => setScenario(e.target.value)}
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '70px' }} />
+      <textarea placeholder="Appearance (for image generation — hair, tattoos, clothing, etc.)" value={appearance} onChange={e => setAppearance(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
 
-      <textarea placeholder="Scenario / Setting" value={scenario} onChange={e => setScenario(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
-
-      <textarea placeholder="First Message (opening message from the character)" value={firstMessage} onChange={e => setFirstMessage(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
-
-      <input placeholder="Tags (comma separated)" value={tags} onChange={e => setTags(e.target.value)}
-        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-
-      <p style={{ color: '#A855F7', margin: '1rem 0 0.3rem' }}>Character Image</p>
-      <input type="file" accept="image/*" onChange={onFileChange} style={{ margin: '0.5rem 0', color: '#F2EDF5' }} />
+      <input type="file" accept="image/*" onChange={onFileChange} style={{ margin: '1rem 0', color: '#F2EDF5' }} />
 
       {imageSrc && (
         <div style={{ position: 'relative', width: '100%', height: '300px', margin: '1rem 0' }}>
@@ -153,9 +131,17 @@ export default function CreateCharacter() {
 
       <button onClick={saveCharacter}
         style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '1rem' }}>
-        Create Character
+        Save Character
       </button>
       {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
+
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
+        <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
+        <a href="/create" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
+        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
+        <a href="/personas" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
+        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
+      </div>
     </div>
   )
 }
