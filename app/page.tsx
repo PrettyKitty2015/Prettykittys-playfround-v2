@@ -22,7 +22,11 @@ export default function Home() {
         return
       }
 
-      const { data: chars } = await supabase.from('characters').select('*').order('created_at', { ascending: false })
+      // Load ALL characters (public)
+      const { data: chars } = await supabase
+        .from('characters')
+        .select('*, profiles(username)')
+        .order('created_at', { ascending: false })
       if (chars) setCharacters(chars)
 
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
@@ -64,9 +68,6 @@ export default function Home() {
             {profile.username}
           </div>
         )}
-        <div style={{ marginTop: '0.7rem' }}>
-          <a href="/login" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.95rem' }}>Login / Sign Up</a>
-        </div>
       </div>
 
       {recentChats.length > 0 && (
@@ -88,7 +89,7 @@ export default function Home() {
       )}
 
       <div style={{ padding: '0 1rem' }}>
-        <h3 style={{ fontSize: '1rem', margin: '0 0 0.8rem 0' }}>Characters</h3>
+        <h3 style={{ fontSize: '1rem', margin: '0 0 0.8rem 0' }}>All Stories</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.8rem' }}>
           {characters.map(char => (
             <div key={char.id} style={{ 
@@ -103,6 +104,9 @@ export default function Home() {
                 <div style={{ padding: '0.65rem 0.75rem' }}>
                   <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{char.name}</div>
                   <div style={{ fontSize: '0.72rem', opacity: 0.65, marginTop: '0.2rem' }}>{char.description?.slice(0, 55)}...</div>
+                  {char.profiles?.username && (
+                    <div style={{ fontSize: '0.65rem', color: '#A855F7', marginTop: '0.3rem' }}>by {char.profiles.username}</div>
+                  )}
                 </div>
               </a>
               <div style={{ padding: '0 0.75rem 0.6rem', display: 'flex', justifyContent: 'space-between' }}>
