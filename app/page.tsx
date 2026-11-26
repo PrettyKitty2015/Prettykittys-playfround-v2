@@ -9,8 +9,6 @@ const supabase = createClient(
 )
 
 export default function Home() {
-  const [characters, setCharacters] = useState<any[]>([])
-  const [recentChats, setRecentChats] = useState<any[]>([])
   const [profile, setProfile] = useState<any>(null)
   const router = useRouter()
 
@@ -21,88 +19,27 @@ export default function Home() {
         router.push('/login')
         return
       }
-      const { data: chars } = await supabase.from('characters').select('*, profiles(username)').order('created_at', { ascending: false })
-      if (chars) setCharacters(chars)
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
       if (prof) setProfile(prof)
-      const { data: msgs } = await supabase.from('messages').select('character_id, characters(name, image_url)').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(20)
-      if (msgs) {
-        const unique = []
-        const seen = new Set()
-        for (const m of msgs) {
-          if (m.character_id && !seen.has(m.character_id)) {
-            seen.add(m.character_id)
-            unique.push(m)
-          }
-        }
-        setRecentChats(unique.slice(0, 6))
-      }
     }
     load()
   }, [router])
 
-  const grouped = characters.reduce((acc: any, char) => {
-    const key = char.story_title || char.name
-    if (!acc[key]) acc[key] = []
-    acc[key].push(char)
-    return acc
-  }, {})
-
   return (
-    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px', background: '#09090D' }}>
-      <div style={{ textAlign: 'center', padding: '1.5rem 1rem 1rem' }}>
-        <img src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0136.png" alt="NightBite" style={{ width: '100%', maxWidth: '260px' }} />
-        {profile?.username && (
-          <div style={{ fontSize: '0.85rem', opacity: 0.75, marginTop: '0.5rem' }}>
-            {profile.avatar_url && <img src={profile.avatar_url} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', verticalAlign: 'middle', marginRight: '0.3rem' }} />}
-            {profile.username}
-          </div>
-        )}
+    <div style={{ minHeight: '100vh', background: '#09090D', color: '#F2EDF5', padding: '1rem', paddingBottom: '90px' }}>
+      <h1 style={{ textAlign: 'center', color: '#A855F7' }}>NightBite</h1>
+      <p style={{ textAlign: 'center' }}>Welcome{profile?.username ? `, ${profile.username}` : ''}</p>
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <a href="/create" style={{ color: '#A855F7', margin: '0 1rem' }}>Create</a>
+        <a href="/reels" style={{ color: '#A855F7', margin: '0 1rem' }}>Reels</a>
+        <a href="/profile" style={{ color: '#A855F7', margin: '0 1rem' }}>Profile</a>
       </div>
-
-      {recentChats.length > 0 && (
-        <div style={{ padding: '0 1rem 1.2rem' }}>
-          <h3 style={{ fontSize: '1rem', margin: '0 0 0.6rem', color: '#A855F7' }}>Recent Chats</h3>
-          <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto' }}>
-            {recentChats.map((chat: any) => (
-              <a key={chat.character_id} href={`/chat/${chat.character_id}`} style={{ textDecoration: 'none', color: 'inherit', flexShrink: 0 }}>
-                <div style={{ width: '68px', textAlign: 'center' }}>
-                  {chat.characters?.image_url && <img src={chat.characters.image_url} alt="" style={{ width: '58px', height: '58px', borderRadius: '12px', objectFit: 'cover' }} />}
-                  <div style={{ fontSize: '0.65rem', marginTop: '0.2rem', opacity: 0.8 }}>{chat.characters?.name?.slice(0, 10)}</div>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div style={{ padding: '0 1rem' }}>
-        <h3 style={{ fontSize: '1rem', margin: '0 0 0.7rem' }}>All Stories</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.75rem' }}>
-          {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => {
-            const first = chars[0]
-            const cover = chars.find((c: any) => c.story_cover_url)?.story_cover_url || first.image_url
-            return (
-              <a key={storyTitle} href={`/story/${encodeURIComponent(storyTitle)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ background: 'rgba(21,18,25,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(168,85,247,0.18)', borderRadius: '16px', overflow: 'hidden' }}>
-                  {cover && <img src={cover} alt="" style={{ width: '100%', height: '170px', objectFit: 'cover' }} />}
-                  <div style={{ padding: '0.65rem' }}>
-                    <div style={{ fontWeight: 600 }}>{storyTitle}</div>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.65, marginTop: '0.15rem' }}>{chars.length} character{chars.length > 1 ? 's' : ''}</div>
-                  </div>
-                </div>
-              </a>
-            )
-          })}
-        </div>
-      </div>
-
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.96)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.55rem 0 0.8rem' }}>
-        <a href="/" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>🏠<br/>Home</a>
-        <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>✨<br/>Create</a>
-        <a href="/reels" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>🎬<br/>Reels</a>
-        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#111116', display: 'flex', justifyContent: 'space-around', padding: '0.8rem 0' }}>
+        <a href="/" style={{ color: '#A855F7' }}>Home</a>
+        <a href="/create" style={{ color: '#F2EDF5' }}>Create</a>
+        <a href="/reels" style={{ color: '#F2EDF5' }}>Reels</a>
+        <a href="/chats" style={{ color: '#F2EDF5' }}>Chats</a>
+        <a href="/profile" style={{ color: '#F2EDF5' }}>Profile</a>
       </div>
     </div>
   )
