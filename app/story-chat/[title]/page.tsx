@@ -19,6 +19,7 @@ export default function StoryChat() {
   const [loading, setLoading] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [sceneImage, setSceneImage] = useState<string | null>(null)
+  const [bgImage, setBgImage] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -32,7 +33,11 @@ export default function StoryChat() {
       setUserId(session.user.id)
 
       const { data: chars } = await supabase.from('characters').select('*').eq('story_title', title)
-      if (chars) setCharacters(chars)
+      if (chars) {
+        setCharacters(chars)
+        const cover = chars.find(c => c.story_cover_url)?.story_cover_url || chars[0]?.image_url
+        if (cover) setBgImage(cover)
+      }
 
       const { data: pers } = await supabase.from('personas').select('*').eq('user_id', session.user.id)
       if (pers) setPersonas(pers)
@@ -113,63 +118,68 @@ Respond in character as one or more of the characters. Use *italics* for actions
   }
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#09090D', color: '#F2EDF5' }}>
-      <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid #2a2a35', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.3rem' }}>←</button>
-        <div style={{ fontWeight: 600, flex: 1 }}>{title}</div>
-        <select
-          value={selectedPersona?.id || ''}
-          onChange={e => setSelectedPersona(personas.find(p => p.id === e.target.value) || null)}
-          style={{ background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '8px', padding: '0.3rem' }}
-        >
-          <option value="">No Persona</option>
-          {personas.map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-      </div>
-
-      {sceneImage && (
-        <div style={{ padding: '0.5rem 1rem' }}>
-          <img src={sceneImage} alt="Scene" style={{ width: '100%', maxHeight: '240px', objectFit: 'cover', borderRadius: '12px' }} />
-        </div>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', color: '#F2EDF5', position: 'relative' }}>
+      {bgImage && (
+        <div style={{ position: 'absolute', inset: 0, background: `url(${bgImage}) center/cover`, opacity: 0.25, zIndex: 0 }} />
       )}
+      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid rgba(42,42,53,0.5)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(9,9,13,0.6)' }}>
+          <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.3rem' }}>←</button>
+          <div style={{ fontWeight: 600, flex: 1 }}>{title}</div>
+          <select
+            value={selectedPersona?.id || ''}
+            onChange={e => setSelectedPersona(personas.find(p => p.id === e.target.value) || null)}
+            style={{ background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '8px', padding: '0.3rem' }}
+          >
+            <option value="">No Persona</option>
+            {personas.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
-        {messages.map((m, i) => (
-          <div key={i} style={{ marginBottom: '0.8rem', textAlign: m.role === 'user' ? 'right' : 'left' }}>
-            <div style={{
-              display: 'inline-block',
-              background: m.role === 'user' ? '#4B176D' : 'rgba(21,18,25,0.7)',
-              padding: '0.6rem 0.8rem',
-              borderRadius: '12px',
-              maxWidth: '80%',
-              whiteSpace: 'pre-wrap'
-            }}>
-              {m.content}
-            </div>
+        {sceneImage && (
+          <div style={{ padding: '0.5rem 1rem' }}>
+            <img src={sceneImage} alt="Scene" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '12px' }} />
           </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
+        )}
 
-      <div style={{ padding: '0.5rem 0.8rem', display: 'flex', gap: '0.5rem', borderTop: '1px solid #2a2a35' }}>
-        <button onClick={generateScene} style={{ background: '#4B176D', color: '#fff', border: 'none', borderRadius: '8px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-          Generate Scene
-        </button>
-      </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
+          {messages.map((m, i) => (
+            <div key={i} style={{ marginBottom: '0.8rem', textAlign: m.role === 'user' ? 'right' : 'left' }}>
+              <div style={{
+                display: 'inline-block',
+                background: m.role === 'user' ? 'rgba(75,23,109,0.85)' : 'rgba(21,18,25,0.75)',
+                padding: '0.6rem 0.8rem',
+                borderRadius: '12px',
+                maxWidth: '80%',
+                whiteSpace: 'pre-wrap'
+              }}>
+                {m.content}
+              </div>
+            </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
 
-      <div style={{ padding: '0.8rem', display: 'flex', gap: '0.5rem' }}>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && send()}
-          placeholder="Message the story..."
-          style={{ flex: 1, padding: '0.7rem', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '20px' }}
-        />
-        <button onClick={send} disabled={loading} style={{ background: '#9E092B', color: '#fff', border: 'none', borderRadius: '50%', width: '42px', height: '42px' }}>
-          {loading ? '…' : '➤'}
-        </button>
+        <div style={{ padding: '0.5rem 0.8rem', background: 'rgba(9,9,13,0.7)' }}>
+          <button onClick={generateScene} style={{ background: '#4B176D', color: '#fff', border: 'none', borderRadius: '8px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+            Generate Scene
+          </button>
+        </div>
+
+        <div style={{ padding: '0.8rem', display: 'flex', gap: '0.5rem', background: 'rgba(9,9,13,0.7)' }}>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && send()}
+            placeholder="Message the story..."
+            style={{ flex: 1, padding: '0.7rem', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '20px' }}
+          />
+          <button onClick={send} disabled={loading} style={{ background: '#9E092B', color: '#fff', border: 'none', borderRadius: '50%', width: '42px', height: '42px' }}>
+            {loading ? '…' : '➤'}
+          </button>
+        </div>
       </div>
     </div>
   )
