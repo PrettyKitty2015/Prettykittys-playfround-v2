@@ -20,21 +20,20 @@ export default function CreateReel() {
 
   async function upload() {
     if (!videoFile) return setMessage('Please choose a video')
-    setMessage(`Uploading ${videoFile.name} (${(videoFile.size / 1024 / 1024).toFixed(1)} MB)...`)
+    setMessage(`File: ${videoFile.name} | Size: ${(videoFile.size / 1024 / 1024).toFixed(2)} MB | Type: ${videoFile.type}`)
+    
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return router.push('/login')
 
-    const videoName = `${Date.now()}-${videoFile.name}`
-    const { error: videoError } = await supabase.storage
+    const videoName = `${Date.now()}-${videoFile.name.replace(/\s/g, '_')}`
+    const { error: videoError, data } = await supabase.storage
       .from('character-images')
       .upload(videoName, videoFile, {
         contentType: videoFile.type || 'video/mp4',
-        cacheControl: '3600',
-        upsert: false
+        upsert: true
       })
 
     if (videoError) {
-      console.error(videoError)
       return setMessage(`Upload failed: ${videoError.message}`)
     }
 
@@ -43,11 +42,9 @@ export default function CreateReel() {
     let thumbUrl = null
     if (thumbFile) {
       const thumbName = `${Date.now()}-thumb-${thumbFile.name}`
-      await supabase.storage.from('character-images').upload(thumbName, thumbFile, {
-        contentType: thumbFile.type || 'image/jpeg'
-      })
-      const { data } = supabase.storage.from('character-images').getPublicUrl(thumbName)
-      thumbUrl = data.publicUrl
+      await supabase.storage.from('character-images').upload(thumbName, thumbFile)
+      const { data: t } = supabase.storage.from('character-images').getPublicUrl(thumbName)
+      thumbUrl = t.publicUrl
     }
 
     const { error } = await supabase.from('reels').insert({
@@ -85,7 +82,7 @@ export default function CreateReel() {
       <button onClick={upload} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '1rem' }}>
         Upload Reel
       </button>
-      {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
+      {message && <p style={{ marginTop: '1rem', color: '#A855F7', whiteSpace: 'pre-wrap' }}>{message}</p>}
     </div>
   )
 }
