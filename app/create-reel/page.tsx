@@ -20,47 +20,53 @@ export default function CreateReel() {
 
   async function upload() {
     if (!videoFile) return setMessage('Please choose a video')
-    setMessage(`File: ${videoFile.name} | Size: ${(videoFile.size / 1024 / 1024).toFixed(2)} MB | Type: ${videoFile.type}`)
-    
+    setMessage('Reading file...')
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return router.push('/login')
 
-    const videoName = `${Date.now()}-${videoFile.name.replace(/\s/g, '_')}`
-    const { error: videoError, data } = await supabase.storage
-      .from('character-images')
-      .upload(videoName, videoFile, {
-        contentType: videoFile.type || 'video/mp4',
-        upsert: true
+    try {
+      const buffer = await videoFile.arrayBuffer()
+      const videoName = `${Date.now()}-${videoFile.name.replace(/\s/g, '_')}`
+
+      const { error: videoError } = await supabase.storage
+        .from('character-images')
+        .upload(videoName, buffer, {
+          contentType: videoFile.type || 'video/mp4',
+          upsert: true
+        })
+
+      if (videoError) return setMessage(`Upload failed: ${videoError.message}`)
+
+      const { data: videoUrl } = supabase.storage.from('character-images').getPublicUrl(videoName)
+
+      let thumbUrl = null
+      if (thumbFile) {
+        const thumbBuffer = await thumbFile.arrayBuffer()
+        const thumbName = `${Date.now()}-thumb-${thumbFile.name}`
+        await supabase.storage.from('character-images').upload(thumbName, thumbBuffer, {
+          contentType: thumbFile.type || 'image/jpeg'
+        })
+        const { data } = supabase.storage.from('character-images').getPublicUrl(thumbName)
+        thumbUrl = data.publicUrl
+      }
+
+      const { error } = await supabase.from('reels').insert({
+        creator_id: session.user.id,
+        title,
+        description,
+        series_title: seriesTitle || null,
+        episode_number: episode,
+        video_url: videoUrl.publicUrl,
+        thumbnail_url: thumbUrl
       })
 
-    if (videoError) {
-      return setMessage(`Upload failed: ${videoError.message}`)
-    }
-
-    const { data: videoUrl } = supabase.storage.from('character-images').getPublicUrl(videoName)
-
-    let thumbUrl = null
-    if (thumbFile) {
-      const thumbName = `${Date.now()}-thumb-${thumbFile.name}`
-      await supabase.storage.from('character-images').upload(thumbName, thumbFile)
-      const { data: t } = supabase.storage.from('character-images').getPublicUrl(thumbName)
-      thumbUrl = t.publicUrl
-    }
-
-    const { error } = await supabase.from('reels').insert({
-      creator_id: session.user.id,
-      title,
-      description,
-      series_title: seriesTitle || null,
-      episode_number: episode,
-      video_url: videoUrl.publicUrl,
-      thumbnail_url: thumbUrl
-    })
-
-    if (error) setMessage(error.message)
-    else {
-      setMessage('Reel created!')
-      setTimeout(() => router.push('/reels'), 1000)
+      if (error) setMessage(error.message)
+      else {
+        setMessage('Reel created!')
+        setTimeout(() => router.push('/reels'), 1000)
+      }
+    } catch (err: any) {
+      setMessage(`Error: ${err.message}`)
     }
   }
 
@@ -82,7 +88,7 @@ export default function CreateReel() {
       <button onClick={upload} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '1rem' }}>
         Upload Reel
       </button>
-      {message && <p style={{ marginTop: '1rem', color: '#A855F7', whiteSpace: 'pre-wrap' }}>{message}</p>}
+      {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
     </div>
   )
 }
