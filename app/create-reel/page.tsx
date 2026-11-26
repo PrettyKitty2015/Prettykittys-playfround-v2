@@ -20,9 +20,9 @@ export default function CreateReel() {
 
   async function upload() {
     if (!videoFile) return setMessage('Please choose a video')
-    setMessage('Reading file...')
+    setMessage('Starting...')
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return router.push('/login')
+    if (!session) return setMessage('Not logged in')
 
     try {
       const buffer = await videoFile.arrayBuffer()
@@ -35,7 +35,7 @@ export default function CreateReel() {
           upsert: true
         })
 
-      if (videoError) return setMessage(`Upload failed: ${videoError.message}`)
+      if (videoError) return setMessage(`Video error: ${videoError.message}`)
 
       const { data: videoUrl } = supabase.storage.from('character-images').getPublicUrl(videoName)
 
@@ -52,7 +52,7 @@ export default function CreateReel() {
 
       const { error } = await supabase.from('reels').insert({
         creator_id: session.user.id,
-        title,
+        title: title || 'Untitled',
         description,
         series_title: seriesTitle || null,
         episode_number: episode,
@@ -60,13 +60,13 @@ export default function CreateReel() {
         thumbnail_url: thumbUrl
       })
 
-      if (error) setMessage(error.message)
+      if (error) setMessage(`DB error: ${error.message}`)
       else {
         setMessage('Reel created!')
         setTimeout(() => router.push('/reels'), 1000)
       }
     } catch (err: any) {
-      setMessage(`Error: ${err.message}`)
+      setMessage(`Caught: ${err.message}`)
     }
   }
 
@@ -88,7 +88,7 @@ export default function CreateReel() {
       <button onClick={upload} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '1rem' }}>
         Upload Reel
       </button>
-      {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
+      {message && <p style={{ marginTop: '1rem', color: '#A855F7', whiteSpace: 'pre-wrap' }}>{message}</p>}
     </div>
   )
 }
