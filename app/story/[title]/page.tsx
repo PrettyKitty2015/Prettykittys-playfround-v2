@@ -13,23 +13,35 @@ export default function StoryPage() {
   const title = decodeURIComponent(params.title as string)
   const [characters, setCharacters] = useState<any[]>([])
   const [profile, setProfile] = useState<any>(null)
+  const [coverUrl, setCoverUrl] = useState<string | null>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
-        if (prof) setProfile(prof)
-      }
-      const { data } = await supabase
-        .from('characters')
-        .select('*')
-        .eq('story_title', title)
-      if (data) setCharacters(data)
+  async function load() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+      if (prof) setProfile(prof)
     }
-    load()
-  }, [title])
+    const { data } = await supabase.from('characters').select('*').eq('story_title', title)
+    if (data) {
+      setCharacters(data)
+      const cover = data.find(c => c.story_cover_url)?.story_cover_url
+      if (cover) setCoverUrl(cover)
+    }
+  }
+
+  useEffect(() => { load() }, [title])
+
+  async function updateCover(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !profile) return
+    const fileName = `${Date.now()}-cover-${file.name}`
+    const { error } = await supabase.storage.from('character-images').upload(fileName, file)
+    if (error) return
+    const { data } = supabase.storage.from('character-images').getPublicUrl(fileName)
+    await supabase.from('characters').update({ story_cover_url: data.publicUrl }).eq('story_title', title).eq('creator_id', profile.id)
+    setCoverUrl(data.publicUrl)
+  }
 
   return (
     <div style={{ minHeight: '100vh', color: '#F2EDF5', padding: '1rem', paddingBottom: '90px' }}>
@@ -37,6 +49,15 @@ export default function StoryPage() {
         <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.4rem', marginRight: '0.5rem' }}>←</button>
         <h1 style={{ color: '#A855F7', margin: 0 }}>{title}</h1>
       </div>
+
+      {coverUrl && <img src={coverUrl} alt="Cover" style={{ width: '100%', maxHeight: '180px', objectFit: 'cover', borderRadius: '12px', marginBottom: '0.8rem' }} />}
+
+      {profile && (
+        <label style={{ display: 'inline-block', marginBottom: '1rem', fontSize: '0.8rem', color: '#A855F7' }}>
+          Change Cover
+          <input type="file" accept="image/*" onChange={updateCover} style={{ display: 'none' }} />
+        </label>
+      )}
 
       <a href={`/story-chat/${encodeURIComponent(title)}`} style={{ display: 'inline-block', marginBottom: '1.2rem', background: '#9E092B', color: '#fff', padding: '0.6rem 1.2rem', borderRadius: '20px', textDecoration: 'none' }}>
         Start Story Chat
@@ -47,13 +68,7 @@ export default function StoryPage() {
         {characters.map(char => (
           <a key={char.id} href={char.creator_id === profile?.id ? `/edit/${char.id}` : `/character/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '14px', overflow: 'hidden' }}>
-              {char.image_url && (
-                <img
-                  src={char.image_url}
-                  alt=""
-                  style={{ width: '100%', height: '220px', objectFit: 'cover', objectPosition: 'top' }}
-                />
-              )}
+              {char.image_url && <img src={char.image_url} alt="" style={{ width: '100%', height: '220px', objectFit: 'cover', objectPosition: 'top' }} />}
               <div style={{ padding: '0.55rem' }}>
                 <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>{char.name}</div>
                 {char.creator_id === profile?.id && <div style={{ fontSize: '0.7rem', color: '#A855F7' }}>Edit</div>}
