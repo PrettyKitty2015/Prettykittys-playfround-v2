@@ -53,7 +53,6 @@ export default function Home() {
     load()
   }, [router])
 
-  // Group by story title
   const grouped = characters.reduce((acc: any, char) => {
     const key = char.story_title || char.name
     if (!acc[key]) acc[key] = []
@@ -100,10 +99,11 @@ export default function Home() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.8rem' }}>
           {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => {
             const first = chars[0]
+            const cover = chars.find((c: any) => c.story_cover_url)?.story_cover_url || first.image_url
             return (
               <a key={storyTitle} href={`/story/${encodeURIComponent(storyTitle)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div style={{ background: 'rgba(21, 18, 25, 0.55)', backdropFilter: 'blur(8px)', border: '1px solid rgba(168, 85, 247, 0.22)', borderRadius: '16px', overflow: 'hidden' }}>
-                  {first.image_url && <img src={first.image_url} alt="" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />}
+                  {cover && <img src={cover} alt="" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />}
                   <div style={{ padding: '0.7rem' }}>
                     <div style={{ fontWeight: 600 }}>{storyTitle}</div>
                     <div style={{ fontSize: '0.7rem', opacity: 0.7, marginTop: '0.2rem' }}>{chars.length} character{chars.length > 1 ? 's' : ''}</div>
