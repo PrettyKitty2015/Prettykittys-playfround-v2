@@ -117,6 +117,48 @@ Respond in character as one or more of the characters. Use *italics* for actions
     setSceneImage(url)
   }
 
+  async function rewriteLast() {
+    if (messages.length < 2) return
+    const lastUser = [...messages].reverse().find(m => m.role === 'user')
+    if (!lastUser) return
+    setLoading(true)
+
+    const charList = characters.map(c => `${c.name}: ${c.description || ''}`).join('\n\n')
+    const personaText = selectedPersona
+      ? `The user is roleplaying as ${selectedPersona.name}: ${selectedPersona.description || ''}`
+      : 'The user is roleplaying as themselves.'
+
+    const system = `You are roleplaying a multi-character story called "${title}".
+Characters:
+${charList}
+
+${personaText}
+
+Respond in character as one or more of the characters. Use *italics* for actions and "quotes" for dialogue. Stay in third person for actions.`
+
+    const history = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
+    const prompt = `${system}\n\n${history}\nuser: ${lastUser.content}\nassistant:`
+
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    })
+    const data = await res.json()
+    const reply = data.reply || '...'
+
+    const newMessages = [...messages.slice(0, -1), { role: 'assistant', content: reply }]
+    setMessages(newMessages)
+
+    // Update the last message in the database
+    const lastMsg = messages[messages.length - 1]
+    if (lastMsg.id) {
+      await supabase.from('messages').update({ content: reply }).eq('id', lastMsg.id)
+    }
+
+    setLoading(false)
+  }
+
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', color: '#F2EDF5', position: 'relative' }}>
       {bgImage && (
@@ -165,10 +207,10 @@ Respond in character as one or more of the characters. Use *italics* for actions
           <div ref={bottomRef} />
         </div>
 
-        <div style={{ padding: '0.5rem 0.8rem', background: 'rgba(9,9,13,0.7)' }}>
-          <button onClick={generateScene} style={{ background: '#4B176D', color: '#fff', border: 'none', borderRadius: '8px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-            Generate Scene
-          </button>
+        <div style={{ padding: '0.4rem 0.8rem', background: 'rgba(9,9,13,0.7)', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+          <button onClick={generateScene} style={{ background: 'rgba(21,18,25,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', fontSize: '1.1rem' }} title="Generate Image">🖼️</button>
+          <button onClick={rewriteLast} style={{ background: 'rgba(21,18,25,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', fontSize: '1.1rem' }} title="Rewrite">🔄</button>
+          <button onClick={() => alert('Video generation coming soon!')} style={{ background: 'rgba(21,18,25,0.8)', color: '#fff', border: 'none', borderRadius: '50%', width: '38px', height: '38px', fontSize: '1.1rem' }} title="Generate Video">🎥</button>
         </div>
 
         <div style={{ padding: '0.8rem', display: 'flex', gap: '0.5rem', background: 'rgba(9,9,13,0.7)' }}>
