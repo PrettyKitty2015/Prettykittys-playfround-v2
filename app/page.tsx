@@ -36,22 +36,13 @@ export default function Home() {
   }, {})
 
   return (
-    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px', position: 'relative' }}>
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/im8fw.mp4"
-        style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -1, opacity: 0.4 }}
-      />
-
-      <div style={{ textAlign: 'center', padding: '1.5rem 1rem 1rem', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px', background: '#09090D' }}>
+      <div style={{ textAlign: 'center', padding: '1.5rem 1rem 1rem' }}>
         <img src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0136.png" alt="NightBite" style={{ width: '100%', maxWidth: '240px' }} />
         {profile?.username && <p style={{ opacity: 0.8 }}>{profile.username}</p>}
       </div>
 
-      <div style={{ padding: '0 1rem', position: 'relative' }}>
+      <div style={{ padding: '0 1rem' }}>
         <h3 style={{ fontSize: '1rem', marginBottom: '0.7rem' }}>All Stories</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.8rem' }}>
           {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => {
