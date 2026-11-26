@@ -11,12 +11,13 @@ const supabase = createClient(
 export default function CreateStory() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [characters, setCharacters] = useState([{ name: '', description: '', image: null as File | null }])
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [characters, setCharacters] = useState([{ name: '', description: '', image: null as File | null, extras: [] as File[] }])
   const [message, setMessage] = useState('')
   const router = useRouter()
 
   function addCharacter() {
-    setCharacters([...characters, { name: '', description: '', image: null }])
+    setCharacters([...characters, { name: '', description: '', image: null, extras: [] }])
   }
 
   function updateCharacter(index: number, field: string, value: any) {
@@ -25,36 +26,40 @@ export default function CreateStory() {
     setCharacters(updated)
   }
 
+  async function uploadFile(file: File) {
+    const fileName = `${Date.now()}-${file.name}`
+    const { error } = await supabase.storage.from('character-images').upload(fileName, file)
+    if (error) return null
+    const { data } = supabase.storage.from('character-images').getPublicUrl(fileName)
+    return data.publicUrl
+  }
+
   async function save() {
     setMessage('Saving...')
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      setMessage('Not logged in')
-      return
-    }
+    if (!session) return setMessage('Not logged in')
+
+    let coverUrl = null
+    if (coverFile) coverUrl = await uploadFile(coverFile)
 
     for (const char of characters) {
       if (!char.name) continue
-      let imageUrl = null
-      if (char.image) {
-        const fileName = `${Date.now()}-${char.image.name}`
-        const { error: uploadError } = await supabase.storage.from('character-images').upload(fileName, char.image)
-        if (!uploadError) {
-          const { data } = supabase.storage.from('character-images').getPublicUrl(fileName)
-          imageUrl = data.publicUrl
-        }
+      const imageUrl = char.image ? await uploadFile(char.image) : null
+      const extraUrls = []
+      for (const extra of char.extras) {
+        const url = await uploadFile(extra)
+        if (url) extraUrls.push(url)
       }
       const { error } = await supabase.from('characters').insert({
         name: char.name,
         description: char.description || description,
         image_url: imageUrl,
+        extra_images: extraUrls,
         story_title: title,
+        story_cover_url: coverUrl,
         creator_id: session.user.id
       })
-      if (error) {
-        setMessage(error.message)
-        return
-      }
+      if (error) return setMessage(error.message)
     }
 
     setMessage('Created!')
@@ -72,6 +77,8 @@ export default function CreateStory() {
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: 'rgba(21,18,25,0.6)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
       <textarea placeholder="Story Description" value={description} onChange={e => setDescription(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: 'rgba(21,18,25,0.6)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
+      <label style={{ fontSize: '0.85rem' }}>Story Cover Image</label>
+      <input type="file" accept="image/*" onChange={e => setCoverFile(e.target.files?.[0] || null)} style={{ margin: '0.5rem 0', color: '#F2EDF5' }} />
 
       <h2 style={{ marginTop: '1.5rem', fontSize: '1.1rem' }}>Characters</h2>
       {characters.map((char, i) => (
@@ -80,8 +87,10 @@ export default function CreateStory() {
             style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.4rem' }} />
           <textarea placeholder="Character Description" value={char.description} onChange={e => updateCharacter(i, 'description', e.target.value)}
             style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.4rem', minHeight: '60px' }} />
-          <input type="file" accept="image/*" onChange={e => updateCharacter(i, 'image', e.target.files?.[0] || null)}
-            style={{ margin: '0.5rem 0', color: '#F2EDF5' }} />
+          <label style={{ fontSize: '0.8rem' }}>Main Image</label>
+          <input type="file" accept="image/*" onChange={e => updateCharacter(i, 'image', e.target.files?.[0] || null)} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
+          <label style={{ fontSize: '0.8rem' }}>Extra Images</label>
+          <input type="file" accept="image/*" multiple onChange={e => updateCharacter(i, 'extras', Array.from(e.target.files || []))} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
         </div>
       ))}
       <button onClick={addCharacter} style={{ width: '100%', padding: '0.6rem', background: '#4B176D', color: '#fff', border: 'none', borderRadius: '0.5rem', marginBottom: '1rem' }}>
