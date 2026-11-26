@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="NightBite" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="apple-touch-icon" href="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0136.png" />
+        <link rel="apple-touch-icon" href="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/76880536-7F6D-47A8-8FF1-7E3E2EC99789.png" />
       </head>
       <body style={{ margin: 0, background: '#09090D' }}>
         <ServiceWorker />
