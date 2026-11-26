@@ -48,6 +48,7 @@ export default function CreateStory() {
         name: char.name,
         description: char.description || description,
         image_url: imageUrl,
+        story_title: title,
         creator_id: session.user.id
       })
       if (error) {
