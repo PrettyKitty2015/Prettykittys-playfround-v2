@@ -43,6 +43,7 @@ export default function Reels() {
   if (reels.length === 0) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#F2EDF5', padding: '1rem' }}>
+        <button onClick={() => router.back()} style={{ position: 'absolute', top: '1rem', left: '1rem', background: 'none', border: 'none', color: '#A855F7', fontSize: '1.4rem' }}>←</button>
         <p>No reels yet.</p>
         <a href="/create-reel" style={{ background: '#9E092B', color: '#fff', padding: '0.7rem 1.5rem', borderRadius: '20px', textDecoration: 'none', marginTop: '1rem' }}>
           Create Reel
@@ -63,6 +64,7 @@ export default function Reels() {
         if (startY - endY > 50) next()
         if (endY - startY > 50) prev()
       }}>
+      <button onClick={() => router.back()} style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 10, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', fontSize: '1.3rem', width: '36px', height: '36px', borderRadius: '50%' }}>←</button>
       <a href="/create-reel" style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 10, background: '#9E092B', color: '#fff', padding: '0.5rem 1rem', borderRadius: '20px', textDecoration: 'none', fontSize: '0.85rem' }}>
         + Create
       </a>
