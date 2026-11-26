@@ -53,16 +53,16 @@ export default function Home() {
 
       <div style={{ padding: '0 1rem', position: 'relative' }}>
         <h3 style={{ fontSize: '1rem', marginBottom: '0.7rem' }}>All Stories</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.8rem' }}>
           {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => {
             const cover = chars.find((c: any) => c.story_cover_url)?.story_cover_url || chars[0].image_url
             return (
               <a key={storyTitle} href={`/story/${encodeURIComponent(storyTitle)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ background: 'rgba(21,18,25,0.6)', borderRadius: '14px', overflow: 'hidden' }}>
-                  {cover && <img src={cover} alt="" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />}
-                  <div style={{ padding: '0.6rem' }}>
-                    <div style={{ fontWeight: 600 }}>{storyTitle}</div>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{chars.length} characters</div>
+                <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
+                  {cover && <img src={cover} alt="" style={{ width: '100%', height: '240px', objectFit: 'cover' }} />}
+                  <div style={{ padding: '0.7rem', background: 'linear-gradient(transparent, rgba(9,9,13,0.85))', position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{storyTitle}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.75 }}>{chars.length} characters</div>
                   </div>
                 </div>
               </a>
