@@ -21,6 +21,7 @@ export default function StoryChat() {
   const [sceneImage, setSceneImage] = useState<string | null>(null)
   const [sceneVideo, setSceneVideo] = useState<string | null>(null)
   const [bgImage, setBgImage] = useState<string | null>(null)
+  const [error, setError] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -61,22 +62,24 @@ export default function StoryChat() {
   async function send() {
     if (!input.trim() || !userId) return
     setLoading(true)
+    setError('')
     const userMessage = input
     setInput('')
 
-    await supabase.from('messages').insert({
-      user_id: userId,
-      story_title: title,
-      role: 'user',
-      content: userMessage
-    })
+    try {
+      await supabase.from('messages').insert({
+        user_id: userId,
+        story_title: title,
+        role: 'user',
+        content: userMessage
+      })
 
-    const charList = characters.map(c => `${c.name}: ${c.description || ''}`).join('\n\n')
-    const personaText = selectedPersona
-      ? `The user is roleplaying as ${selectedPersona.name}: ${selectedPersona.description || ''}`
-      : 'The user is roleplaying as themselves.'
+      const charList = characters.map(c => `${c.name}: ${c.description || ''}`).join('\n\n')
+      const personaText = selectedPersona
+        ? `The user is roleplaying as ${selectedPersona.name}: ${selectedPersona.description || ''}`
+        : 'The user is roleplaying as themselves.'
 
-    const system = `You are roleplaying a multi-character story called "${title}".
+      const system = `You are roleplaying a multi-character story called "${title}".
 Characters:
 ${charList}
 
@@ -84,35 +87,39 @@ ${personaText}
 
 Respond in character as one or more of the characters. Use *italics* for actions and "quotes" for dialogue. Stay in third person for actions.`
 
-    const history = messages.map(m => `${m.role}: ${m.content}`).join('\n')
-    const prompt = `${system}\n\n${history}\nuser: ${userMessage}\nassistant:`
+      const history = messages.map(m => `${m.role}: ${m.content}`).join('\n')
+      const prompt = `${system}\n\n${history}\nuser: ${userMessage}\nassistant:`
 
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    })
-    const data = await res.json()
-    const reply = data.reply || '...'
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Chat API failed')
+      const reply = data.reply || '...'
 
-    await supabase.from('messages').insert({
-      user_id: userId,
-      story_title: title,
-      role: 'assistant',
-      content: reply
-    })
+      await supabase.from('messages').insert({
+        user_id: userId,
+        story_title: title,
+        role: 'assistant',
+        content: reply
+      })
 
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', content: userMessage },
-      { role: 'assistant', content: reply }
-    ])
+      setMessages(prev => [
+        ...prev,
+        { role: 'user', content: userMessage },
+        { role: 'assistant', content: reply }
+      ])
+    } catch (err: any) {
+      setError(err.message || 'Failed to send')
+    }
     setLoading(false)
   }
 
   async function generateScene() {
     const last = messages.filter(m => m.role === 'assistant').pop()
-    if (!last) return
+    if (!last) return setError('Send a message first')
     const prompt = encodeURIComponent(`${title}, ${last.content.slice(0, 200)}, cinematic, detailed, gothic fantasy`)
     setSceneImage(`https://image.pollinations.ai/prompt/${prompt}?width=512&height=768&nologo=true`)
     setSceneVideo(null)
@@ -120,7 +127,7 @@ Respond in character as one or more of the characters. Use *italics* for actions
 
   async function generateVideo() {
     const last = messages.filter(m => m.role === 'assistant').pop()
-    if (!last) return
+    if (!last) return setError('Send a message first')
     const prompt = encodeURIComponent(`${title}, ${last.content.slice(0, 150)}, cinematic gothic fantasy`)
     const key = process.env.NEXT_PUBLIC_POLLINATIONS_KEY || ''
     const url = `https://gen.pollinations.ai/video/${prompt}?model=seedance&width=512&height=768${key ? `&key=${key}` : ''}`
@@ -129,17 +136,19 @@ Respond in character as one or more of the characters. Use *italics* for actions
   }
 
   async function rewriteLast() {
-    if (messages.length < 2) return
+    if (messages.length < 2) return setError('Need a message first')
     const lastUser = [...messages].reverse().find(m => m.role === 'user')
     if (!lastUser) return
     setLoading(true)
+    setError('')
 
-    const charList = characters.map(c => `${c.name}: ${c.description || ''}`).join('\n\n')
-    const personaText = selectedPersona
-      ? `The user is roleplaying as ${selectedPersona.name}: ${selectedPersona.description || ''}`
-      : 'The user is roleplaying as themselves.'
+    try {
+      const charList = characters.map(c => `${c.name}: ${c.description || ''}`).join('\n\n')
+      const personaText = selectedPersona
+        ? `The user is roleplaying as ${selectedPersona.name}: ${selectedPersona.description || ''}`
+        : 'The user is roleplaying as themselves.'
 
-    const system = `You are roleplaying a multi-character story called "${title}".
+      const system = `You are roleplaying a multi-character story called "${title}".
 Characters:
 ${charList}
 
@@ -147,18 +156,22 @@ ${personaText}
 
 Respond in character as one or more of the characters. Use *italics* for actions and "quotes" for dialogue. Stay in third person for actions.`
 
-    const history = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
-    const prompt = `${system}\n\n${history}\nuser: ${lastUser.content}\nassistant:`
+      const history = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
+      const prompt = `${system}\n\n${history}\nuser: ${lastUser.content}\nassistant:`
 
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    })
-    const data = await res.json()
-    const reply = data.reply || '...'
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Rewrite failed')
+      const reply = data.reply || '...'
 
-    setMessages(prev => [...prev.slice(0, -1), { role: 'assistant', content: reply }])
+      setMessages(prev => [...prev.slice(0, -1), { role: 'assistant', content: reply }])
+    } catch (err: any) {
+      setError(err.message || 'Rewrite failed')
+    }
     setLoading(false)
   }
 
@@ -194,6 +207,7 @@ Respond in character as one or more of the characters. Use *italics* for actions
         )}
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
+          {error && <p style={{ color: '#ff6b6b', textAlign: 'center' }}>{error}</p>}
           {messages.map((m, i) => (
             <div key={i} style={{ marginBottom: '0.8rem', textAlign: m.role === 'user' ? 'right' : 'left' }}>
               <div style={{
