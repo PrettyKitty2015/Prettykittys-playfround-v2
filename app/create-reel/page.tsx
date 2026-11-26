@@ -11,7 +11,10 @@ const supabase = createClient(
 export default function CreateReel() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [seriesTitle, setSeriesTitle] = useState('')
+  const [episode, setEpisode] = useState(1)
   const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [thumbFile, setThumbFile] = useState<File | null>(null)
   const [message, setMessage] = useState('')
   const router = useRouter()
 
@@ -21,17 +24,31 @@ export default function CreateReel() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return router.push('/login')
 
-    const fileName = `${Date.now()}-${videoFile.name}`
-    const { error: uploadError } = await supabase.storage.from('character-images').upload(fileName, videoFile)
-    if (uploadError) return setMessage(uploadError.message)
+    // Upload video
+    const videoName = `${Date.now()}-${videoFile.name}`
+    const { error: videoError } = await supabase.storage.from('character-images').upload(videoName, videoFile)
+    if (videoError) return setMessage(videoError.message)
+    const { data: videoUrl } = supabase.storage.from('character-images').getPublicUrl(videoName)
 
-    const { data: urlData } = supabase.storage.from('character-images').getPublicUrl(fileName)
+    // Upload thumbnail (optional)
+    let thumbUrl = null
+    if (thumbFile) {
+      const thumbName = `${Date.now()}-thumb-${thumbFile.name}`
+      const { error: thumbError } = await supabase.storage.from('character-images').upload(thumbName, thumbFile)
+      if (!thumbError) {
+        const { data } = supabase.storage.from('character-images').getPublicUrl(thumbName)
+        thumbUrl = data.publicUrl
+      }
+    }
 
     const { error } = await supabase.from('reels').insert({
       creator_id: session.user.id,
       title,
       description,
-      video_url: urlData.publicUrl
+      series_title: seriesTitle || null,
+      episode_number: episode,
+      video_url: videoUrl.publicUrl,
+      thumbnail_url: thumbUrl
     })
 
     if (error) setMessage(error.message)
@@ -44,23 +61,22 @@ export default function CreateReel() {
   return (
     <div style={{ minHeight: '100vh', color: '#F2EDF5', padding: '1.5rem', paddingBottom: '90px' }}>
       <h1 style={{ color: '#A855F7' }}>Create Reel</h1>
-      <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)}
+      <input placeholder="Episode Title" value={title} onChange={e => setTitle(e.target.value)}
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
+      <input placeholder="Series Title (optional)" value={seriesTitle} onChange={e => setSeriesTitle(e.target.value)}
+        style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
+      <input type="number" placeholder="Episode Number" value={episode} onChange={e => setEpisode(Number(e.target.value))}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
       <textarea placeholder="Description" value={description} onChange={e => setDescription(e.target.value)}
         style={{ width: '100%', padding: '0.75rem', margin: '0.5rem 0', background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '80px' }} />
-      <input type="file" accept="video/*" onChange={e => setVideoFile(e.target.files?.[0] || null)} style={{ margin: '1rem 0', color: '#F2EDF5' }} />
-      <button onClick={upload} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem' }}>
+      <label style={{ fontSize: '0.85rem', opacity: 0.8 }}>Video</label>
+      <input type="file" accept="video/*" onChange={e => setVideoFile(e.target.files?.[0] || null)} style={{ margin: '0.5rem 0', color: '#F2EDF5' }} />
+      <label style={{ fontSize: '0.85rem', opacity: 0.8 }}>Thumbnail (optional)</label>
+      <input type="file" accept="image/*" onChange={e => setThumbFile(e.target.files?.[0] || null)} style={{ margin: '0.5rem 0', color: '#F2EDF5' }} />
+      <button onClick={upload} style={{ width: '100%', padding: '0.75rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '1rem' }}>
         Upload Reel
       </button>
       {message && <p style={{ marginTop: '1rem', color: '#A855F7' }}>{message}</p>}
-
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
-        <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
-        <a href="/create-reel" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🎬<br/>New Reel</a>
-        <a href="/reels" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>📺<br/>Reels</a>
-        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
-      </div>
     </div>
   )
 }
