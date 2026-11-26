@@ -36,24 +36,33 @@ export default function Home() {
   }, {})
 
   return (
-    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px', background: '#09090D' }}>
-      <div style={{ textAlign: 'center', padding: '1.5rem 1rem 1rem' }}>
+    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px', position: 'relative' }}>
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/im8fw.mp4"
+        style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -1, opacity: 0.35 }}
+      />
+
+      <div style={{ textAlign: 'center', padding: '1.5rem 1rem 1rem', position: 'relative' }}>
         <img src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0136.png" alt="NightBite" style={{ width: '100%', maxWidth: '240px' }} />
         {profile?.username && <p style={{ opacity: 0.8 }}>{profile.username}</p>}
       </div>
 
-      <div style={{ padding: '0 1rem' }}>
+      <div style={{ padding: '0 1rem', position: 'relative' }}>
         <h3 style={{ fontSize: '1rem', marginBottom: '0.7rem' }}>All Stories</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.8rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.9rem' }}>
           {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => {
             const cover = chars.find((c: any) => c.story_cover_url)?.story_cover_url || chars[0].image_url
             return (
               <a key={storyTitle} href={`/story/${encodeURIComponent(storyTitle)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
-                  {cover && <img src={cover} alt="" style={{ width: '100%', height: '240px', objectFit: 'cover' }} />}
-                  <div style={{ padding: '0.7rem', background: 'linear-gradient(transparent, rgba(9,9,13,0.85))', position: 'absolute', bottom: 0, left: 0, right: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{storyTitle}</div>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.75 }}>{chars.length} characters</div>
+                  {cover && <img src={cover} alt="" style={{ width: '100%', height: '280px', objectFit: 'cover' }} />}
+                  <div style={{ padding: '0.75rem', background: 'linear-gradient(transparent, rgba(9,9,13,0.9))', position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '1rem' }}>{storyTitle}</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.75 }}>{chars.length} characters</div>
                   </div>
                 </div>
               </a>
