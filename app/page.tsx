@@ -59,7 +59,7 @@ export default function Home() {
             return (
               <a key={storyTitle} href={`/story/${encodeURIComponent(storyTitle)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
-                  {cover && <img src={cover} alt="" style={{ width: '100%', height: '280px', objectFit: 'cover' }} />}
+                  {cover && <img src={cover} alt="" style={{ width: '100%', height: '340px', objectFit: 'cover' }} />}
                   <div style={{ padding: '0.75rem', background: 'linear-gradient(transparent, rgba(9,9,13,0.9))', position: 'absolute', bottom: 0, left: 0, right: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: '1rem' }}>{storyTitle}</div>
                     <div style={{ fontSize: '0.72rem', opacity: 0.75 }}>{chars.length} characters</div>
