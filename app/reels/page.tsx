@@ -21,11 +21,10 @@ export default function Reels() {
       return
     }
     setUserId(session.user.id)
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('reels')
       .select('*')
       .order('created_at', { ascending: false })
-    if (error) console.error(error)
     if (data) setReels(data)
   }
 
