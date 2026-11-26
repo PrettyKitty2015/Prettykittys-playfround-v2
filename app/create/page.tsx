@@ -33,17 +33,6 @@ export default function CreateStory() {
       return
     }
 
-    const { data: story, error: storyError } = await supabase.from('stories').insert({
-      title,
-      description,
-      user_id: session.user.id
-    }).select().single()
-
-    if (storyError || !story) {
-      setMessage(storyError?.message || 'Failed to create story')
-      return
-    }
-
     for (const char of characters) {
       if (!char.name) continue
       let imageUrl = null
@@ -55,16 +44,19 @@ export default function CreateStory() {
           imageUrl = data.publicUrl
         }
       }
-      await supabase.from('characters').insert({
+      const { error } = await supabase.from('characters').insert({
         name: char.name,
-        description: char.description,
+        description: char.description || description,
         image_url: imageUrl,
-        story_id: story.id,
         creator_id: session.user.id
       })
+      if (error) {
+        setMessage(error.message)
+        return
+      }
     }
 
-    setMessage('Story created!')
+    setMessage('Characters created!')
     setTimeout(() => router.push('/'), 1000)
   }
 
