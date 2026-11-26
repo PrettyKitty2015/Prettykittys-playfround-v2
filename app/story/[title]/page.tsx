@@ -54,24 +54,11 @@ export default function StoryPage() {
     const image = new Image()
     image.src = imageSrc
     await new Promise(resolve => image.onload = resolve)
-
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!
     canvas.width = croppedAreaPixels.width
     canvas.height = croppedAreaPixels.height
-
-    ctx.drawImage(
-      image,
-      croppedAreaPixels.x,
-      croppedAreaPixels.y,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height,
-      0,
-      0,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height
-    )
-
+    ctx.drawImage(image, croppedAreaPixels.x, croppedAreaPixels.y, croppedAreaPixels.width, croppedAreaPixels.height, 0, 0, croppedAreaPixels.width, croppedAreaPixels.height)
     return new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg'))
   }
 
@@ -95,15 +82,17 @@ export default function StoryPage() {
         <h1 style={{ color: '#A855F7', margin: 0 }}>{title}</h1>
       </div>
 
-      {coverUrl && !imageSrc && <img src={coverUrl} alt="Cover" style={{ width: '100%', maxHeight: '280px', objectFit: 'cover', borderRadius: '12px', marginBottom: '0.8rem' }} />}
+      {coverUrl && !imageSrc && (
+        <img src={coverUrl} alt="Cover" style={{ width: '100%', maxHeight: '420px', objectFit: 'cover', borderRadius: '12px', marginBottom: '0.8rem' }} />
+      )}
 
       {imageSrc && (
-        <div style={{ position: 'relative', width: '100%', height: '380px', marginBottom: '1rem' }}>
+        <div style={{ position: 'relative', width: '100%', height: '480px', marginBottom: '1rem' }}>
           <Cropper
             image={imageSrc}
             crop={crop}
             zoom={zoom}
-            aspect={16 / 9}
+            aspect={2 / 3}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={onCropComplete}
@@ -134,7 +123,7 @@ export default function StoryPage() {
         {characters.map(char => (
           <a key={char.id} href={char.creator_id === profile?.id ? `/edit/${char.id}` : `/character/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '14px', overflow: 'hidden' }}>
-              {char.image_url && <img src={char.image_url} alt="" style={{ width: '100%', height: '280px', objectFit: 'cover', objectPosition: 'top' }} />}
+              {char.image_url && <img src={char.image_url} alt="" style={{ width: '100%', height: '320px', objectFit: 'cover', objectPosition: 'top' }} />}
               <div style={{ padding: '0.55rem' }}>
                 <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>{char.name}</div>
                 {char.creator_id === profile?.id && <div style={{ fontSize: '0.7rem', color: '#A855F7' }}>Edit</div>}
