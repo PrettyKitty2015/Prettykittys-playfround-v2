@@ -72,6 +72,13 @@ export default function Profile() {
     }
   }
 
+  const grouped = stories.reduce((acc: any, char) => {
+    const key = char.story_title || 'Other'
+    if (!acc[key]) acc[key] = []
+    acc[key].push(char)
+    return acc
+  }, {})
+
   return (
     <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px' }}>
       <div style={{ height: '130px', background: banner ? `url(${banner}) center/cover` : 'rgba(21,18,25,0.4)', position: 'relative' }}>
@@ -101,17 +108,21 @@ export default function Profile() {
           </div>
         )}
 
-        <h3 style={{ color: accent, margin: '0 0 0.7rem' }}>My Characters</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.7rem' }}>
-          {stories.map(s => (
-            <a key={s.id} href={`/character/${s.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ background: 'rgba(21,18,25,0.5)', borderRadius: '12px', overflow: 'hidden' }}>
-                {s.image_url && <img src={s.image_url} alt="" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />}
-                <div style={{ padding: '0.5rem', fontSize: '0.85rem' }}>{s.name}</div>
+        <h3 style={{ color: accent, margin: '0 0 0.7rem' }}>My Stories</h3>
+        {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => {
+          const cover = chars.find((c: any) => c.story_cover_url)?.story_cover_url || chars[0].image_url
+          return (
+            <a key={storyTitle} href={`/story/${encodeURIComponent(storyTitle)}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block', marginBottom: '0.8rem' }}>
+              <div style={{ background: 'rgba(21,18,25,0.5)', borderRadius: '14px', overflow: 'hidden', display: 'flex' }}>
+                {cover && <img src={cover} alt="" style={{ width: '90px', height: '90px', objectFit: 'cover' }} />}
+                <div style={{ padding: '0.6rem' }}>
+                  <div style={{ fontWeight: 600 }}>{storyTitle}</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{chars.length} character{chars.length > 1 ? 's' : ''}</div>
+                </div>
               </div>
             </a>
-          ))}
-        </div>
+          )
+        })}
 
         <h3 style={{ color: accent, margin: '1.3rem 0 0.7rem' }}>My Reels</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.7rem' }}>
