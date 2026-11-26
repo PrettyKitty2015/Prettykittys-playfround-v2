@@ -12,10 +12,16 @@ export default function StoryPage() {
   const params = useParams()
   const title = decodeURIComponent(params.title as string)
   const [characters, setCharacters] = useState<any[]>([])
+  const [profile, setProfile] = useState<any>(null)
   const router = useRouter()
 
   useEffect(() => {
     async function load() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+        if (prof) setProfile(prof)
+      }
       const { data } = await supabase
         .from('characters')
         .select('*')
@@ -39,10 +45,13 @@ export default function StoryPage() {
       <h2 style={{ fontSize: '1.1rem', marginBottom: '0.8rem' }}>Characters</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.8rem' }}>
         {characters.map(char => (
-          <a key={char.id} href={`/chat/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <a key={char.id} href={char.creator_id === profile?.id ? `/edit/${char.id}` : `/character/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '12px', overflow: 'hidden' }}>
               {char.image_url && <img src={char.image_url} alt="" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />}
-              <div style={{ padding: '0.5rem', fontSize: '0.9rem' }}>{char.name}</div>
+              <div style={{ padding: '0.5rem', fontSize: '0.9rem' }}>
+                {char.name}
+                {char.creator_id === profile?.id && <div style={{ fontSize: '0.7rem', color: '#A855F7' }}>Edit</div>}
+              </div>
             </div>
           </a>
         ))}
