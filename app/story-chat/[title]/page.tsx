@@ -120,7 +120,7 @@ Respond in character as one or more of the characters. Use *italics* for actions
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', color: '#F2EDF5', position: 'relative' }}>
       {bgImage && (
-        <div style={{ position: 'absolute', inset: 0, background: `url(${bgImage}) center/cover`, opacity: 0.25, zIndex: 0 }} />
+        <div style={{ position: 'absolute', inset: 0, background: `url(${bgImage}) center/cover`, opacity: 0.12, zIndex: 0 }} />
       )}
       <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid rgba(42,42,53,0.5)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(9,9,13,0.6)' }}>
