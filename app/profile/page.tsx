@@ -16,6 +16,7 @@ export default function Profile() {
   const [banner, setBanner] = useState('')
   const [avatar, setAvatar] = useState('')
   const [stories, setStories] = useState<any[]>([])
+  const [reels, setReels] = useState<any[]>([])
   const [message, setMessage] = useState('')
   const [editing, setEditing] = useState(false)
   const router = useRouter()
@@ -37,6 +38,9 @@ export default function Profile() {
     }
     const { data: chars } = await supabase.from('characters').select('*').eq('creator_id', session.user.id).order('created_at', { ascending: false })
     if (chars) setStories(chars)
+
+    const { data: userReels } = await supabase.from('reels').select('*').eq('creator_id', session.user.id).order('created_at', { ascending: false })
+    if (userReels) setReels(userReels)
   }
 
   useEffect(() => { load() }, [])
@@ -125,13 +129,30 @@ export default function Profile() {
             </a>
           ))}
         </div>
+
+        <h3 style={{ color: accent, margin: '1.5rem 0 0.8rem' }}>My Reels ({reels.length})</h3>
+        {reels.length === 0 && <p style={{ opacity: 0.6 }}>No reels yet.</p>}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.8rem' }}>
+          {reels.map(r => (
+            <a key={r.id} href="/reels" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '14px', overflow: 'hidden' }}>
+                {r.thumbnail_url ? (
+                  <img src={r.thumbnail_url} alt="" style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '120px', background: '#151219', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>No thumbnail</div>
+                )}
+                <div style={{ padding: '0.5rem', fontSize: '0.85rem' }}>{r.title}</div>
+              </div>
+            </a>
+          ))}
+        </div>
       </div>
 
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
         <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
         <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
+        <a href="/reels" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🎬<br/>Reels</a>
         <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/personas" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
         <a href="/profile" style={{ color: accent, textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
       </div>
     </div>
