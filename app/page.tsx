@@ -49,7 +49,7 @@ export default function Home() {
   }, {})
 
   return (
-    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px' }}>
+    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px', background: '#09090D' }}>
       <div style={{ textAlign: 'center', padding: '1.5rem 1rem 1rem' }}>
         <img src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0136.png" alt="NightBite" style={{ width: '100%', maxWidth: '260px' }} />
         {profile?.username && (
@@ -62,7 +62,7 @@ export default function Home() {
 
       {recentChats.length > 0 && (
         <div style={{ padding: '0 1rem 1.2rem' }}>
-          <h3 style={{ fontSize: '0.95rem', margin: '0 0 0.6rem', color: '#A855F7' }}>Recent Chats</h3>
+          <h3 style={{ fontSize: '1rem', margin: '0 0 0.6rem', color: '#A855F7' }}>Recent Chats</h3>
           <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto' }}>
             {recentChats.map((chat: any) => (
               <a key={chat.character_id} href={`/chat/${chat.character_id}`} style={{ textDecoration: 'none', color: 'inherit', flexShrink: 0 }}>
@@ -77,7 +77,7 @@ export default function Home() {
       )}
 
       <div style={{ padding: '0 1rem' }}>
-        <h3 style={{ fontSize: '0.95rem', margin: '0 0 0.7rem' }}>All Stories</h3>
+        <h3 style={{ fontSize: '1rem', margin: '0 0 0.7rem' }}>All Stories</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.75rem' }}>
           {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => {
             const first = chars[0]
@@ -87,8 +87,8 @@ export default function Home() {
                 <div style={{ background: 'rgba(21,18,25,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(168,85,247,0.18)', borderRadius: '16px', overflow: 'hidden' }}>
                   {cover && <img src={cover} alt="" style={{ width: '100%', height: '170px', objectFit: 'cover' }} />}
                   <div style={{ padding: '0.65rem' }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.92rem' }}>{storyTitle}</div>
-                    <div style={{ fontSize: '0.68rem', opacity: 0.65, marginTop: '0.15rem' }}>{chars.length} character{chars.length > 1 ? 's' : ''}</div>
+                    <div style={{ fontWeight: 600 }}>{storyTitle}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.65, marginTop: '0.15rem' }}>{chars.length} character{chars.length > 1 ? 's' : ''}</div>
                   </div>
                 </div>
               </a>
