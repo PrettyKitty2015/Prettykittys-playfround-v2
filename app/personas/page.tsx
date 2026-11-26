@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
@@ -8,88 +8,109 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export default function Personas() {
-  const [personas, setPersonas] = useState<any[]>([])
+export default function CreatePersona() {
   const [name, setName] = useState('')
-  const [background, setBackground] = useState('')
-  const [appearance, setAppearance] = useState('')
+  const [pronouns, setPronouns] = useState('None')
+  const [description, setDescription] = useState('')
+  const [avatar, setAvatar] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const router = useRouter()
 
-  async function load() {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
-    const { data } = await supabase.from('personas').select('*').eq('user_id', session.user.id)
-    if (data) setPersonas(data)
+  async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const fileName = `${Date.now()}-${file.name}`
+    const { error } = await supabase.storage.from('character-images').upload(fileName, file)
+    if (!error) {
+      const { data } = supabase.storage.from('character-images').getPublicUrl(fileName)
+      setAvatar(data.publicUrl)
+    }
   }
 
-  useEffect(() => { load() }, [])
-
   async function save() {
+    if (!name.trim()) return setMessage('Name is required')
     setMessage('Saving...')
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      setMessage('Not logged in')
-      return
-    }
+    if (!session) return router.push('/login')
+
     const { error } = await supabase.from('personas').insert({
+      user_id: session.user.id,
       name,
-      background,
-      appearance,
-      user_id: session.user.id
+      pronouns,
+      description,
+      avatar_url: avatar
     })
+
     if (error) setMessage(error.message)
     else {
       setMessage('Persona created!')
-      setName('')
-      setBackground('')
-      setAppearance('')
-      load()
+      setTimeout(() => router.push('/personas'), 800)
     }
-  }
-
-  async function deletePersona(id: string) {
-    if (!confirm('Delete this persona?')) return
-    await supabase.from('personas').delete().eq('id', id)
-    load()
   }
 
   return (
     <div style={{ minHeight: '100vh', color: '#F2EDF5', padding: '1rem', paddingBottom: '90px' }}>
-      <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#9E092B', textAlign: 'center' }}>Personas</h1>
-
-      <div style={{ background: 'rgba(21, 18, 25, 0.55)', backdropFilter: 'blur(8px)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '16px', padding: '1rem', margin: '1rem 0' }}>
-        <input placeholder="Persona Name" value={name} onChange={e => setName(e.target.value)}
-          style={{ width: '100%', padding: '0.7rem', margin: '0.4rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-        <textarea placeholder="Background / Story" value={background} onChange={e => setBackground(e.target.value)}
-          style={{ width: '100%', padding: '0.7rem', margin: '0.4rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '70px' }} />
-        <textarea placeholder="Appearance" value={appearance} onChange={e => setAppearance(e.target.value)}
-          style={{ width: '100%', padding: '0.7rem', margin: '0.4rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '60px' }} />
-        <button onClick={save} style={{ width: '100%', padding: '0.7rem', background: '#9E092B', color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
-          Create Persona
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.2rem' }}>
+        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.4rem' }}>←</button>
+        <h1 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: '1.1rem' }}>Create Persona</h1>
+        <button onClick={save} style={{ background: '#4B176D', color: '#fff', border: 'none', padding: '0.4rem 0.9rem', borderRadius: '20px', fontSize: '0.85rem' }}>
+          Create
         </button>
-        {message && <p style={{ marginTop: '0.5rem', color: '#A855F7' }}>{message}</p>}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-        {personas.map(p => (
-          <div key={p.id} style={{ background: 'rgba(21, 18, 25, 0.55)', backdropFilter: 'blur(6px)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '14px', padding: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontWeight: 600 }}>{p.name}</div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{p.background?.slice(0, 50)}...</div>
-            </div>
-            <button onClick={() => deletePersona(p.id)} style={{ background: '#4B176D', color: '#fff', border: 'none', padding: '0.4rem 0.7rem', borderRadius: '8px', fontSize: '0.75rem' }}>Delete</button>
+      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        <label style={{ cursor: 'pointer' }}>
+          <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: 'rgba(21,18,25,0.7)', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {avatar ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '2rem' }}>📷</span>}
           </div>
-        ))}
+          <div style={{ fontSize: '0.8rem', color: '#A855F7', marginTop: '0.4rem' }}>Upload Avatar</div>
+          <input type="file" accept="image/*" onChange={uploadAvatar} style={{ display: 'none' }} />
+        </label>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
-        <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
-        <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
-        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/personas" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>👤<br/>Personas</a>
-        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
+      <div style={{ marginBottom: '1rem' }}>
+        <label style={{ fontSize: '0.85rem', opacity: 0.8 }}>My Name*</label>
+        <input
+          placeholder="Enter your name"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          style={{ width: '100%', padding: '0.75rem', marginTop: '0.3rem', background: 'rgba(21,18,25,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '10px' }}
+        />
       </div>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <label style={{ fontSize: '0.85rem', opacity: 0.8 }}>Pronouns</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.4rem' }}>
+          {['She/Her', 'He/Him', 'They/Them', 'None'].map(p => (
+            <button
+              key={p}
+              onClick={() => setPronouns(p)}
+              style={{
+                padding: '0.45rem 0.8rem',
+                borderRadius: '20px',
+                border: pronouns === p ? '1px solid #A855F7' : '1px solid #333',
+                background: pronouns === p ? 'rgba(168,85,247,0.2)' : 'rgba(21,18,25,0.7)',
+                color: '#F2EDF5',
+                fontSize: '0.8rem'
+              }}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '1.2rem' }}>
+        <label style={{ fontSize: '0.85rem', opacity: 0.8 }}>Description</label>
+        <textarea
+          placeholder="Describe the persona's appearance, personality, background..."
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          style={{ width: '100%', padding: '0.75rem', marginTop: '0.3rem', background: 'rgba(21,18,25,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '10px', minHeight: '120px' }}
+        />
+      </div>
+
+      {message && <p style={{ textAlign: 'center', color: '#A855F7' }}>{message}</p>}
     </div>
   )
 }
