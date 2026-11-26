@@ -12,10 +12,13 @@ export default function StoryChat() {
   const params = useParams()
   const title = decodeURIComponent(params.title as string)
   const [characters, setCharacters] = useState<any[]>([])
+  const [personas, setPersonas] = useState<any[]>([])
+  const [selectedPersona, setSelectedPersona] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [sceneImage, setSceneImage] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -28,11 +31,11 @@ export default function StoryChat() {
       }
       setUserId(session.user.id)
 
-      const { data: chars } = await supabase
-        .from('characters')
-        .select('*')
-        .eq('story_title', title)
+      const { data: chars } = await supabase.from('characters').select('*').eq('story_title', title)
       if (chars) setCharacters(chars)
+
+      const { data: pers } = await supabase.from('personas').select('*').eq('user_id', session.user.id)
+      if (pers) setPersonas(pers)
 
       const { data: msgs } = await supabase
         .from('messages')
@@ -55,7 +58,6 @@ export default function StoryChat() {
     const userMessage = input
     setInput('')
 
-    // Save user message
     await supabase.from('messages').insert({
       user_id: userId,
       story_title: title,
@@ -63,18 +65,22 @@ export default function StoryChat() {
       content: userMessage
     })
 
-    // Build prompt with all characters
     const charList = characters.map(c => `${c.name}: ${c.description || ''}`).join('\n\n')
-    const system = `You are roleplaying a multi-character story called "${title}". 
+    const personaText = selectedPersona
+      ? `The user is roleplaying as ${selectedPersona.name}: ${selectedPersona.description || ''}`
+      : 'The user is roleplaying as themselves.'
+
+    const system = `You are roleplaying a multi-character story called "${title}".
 Characters:
 ${charList}
+
+${personaText}
 
 Respond in character as one or more of the characters. Use *italics* for actions and "quotes" for dialogue. Stay in third person for actions.`
 
     const history = messages.map(m => `${m.role}: ${m.content}`).join('\n')
     const prompt = `${system}\n\n${history}\nuser: ${userMessage}\nassistant:`
 
-    // Call your AI (replace with your actual AI endpoint)
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -98,12 +104,36 @@ Respond in character as one or more of the characters. Use *italics* for actions
     setLoading(false)
   }
 
+  async function generateScene() {
+    const last = messages.filter(m => m.role === 'assistant').pop()
+    if (!last) return
+    const prompt = encodeURIComponent(`${title}, ${last.content.slice(0, 200)}, cinematic, detailed, gothic fantasy`)
+    const url = `https://image.pollinations.ai/prompt/${prompt}?width=512&height=768&nologo=true`
+    setSceneImage(url)
+  }
+
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#09090D', color: '#F2EDF5' }}>
-      <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid #2a2a35', display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid #2a2a35', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#A855F7', fontSize: '1.3rem' }}>←</button>
-        <div style={{ marginLeft: '0.5rem', fontWeight: 600 }}>{title}</div>
+        <div style={{ fontWeight: 600, flex: 1 }}>{title}</div>
+        <select
+          value={selectedPersona?.id || ''}
+          onChange={e => setSelectedPersona(personas.find(p => p.id === e.target.value) || null)}
+          style={{ background: '#151219', color: '#F2EDF5', border: '1px solid #333', borderRadius: '8px', padding: '0.3rem' }}
+        >
+          <option value="">No Persona</option>
+          {personas.map(p => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
       </div>
+
+      {sceneImage && (
+        <div style={{ padding: '0.5rem 1rem' }}>
+          <img src={sceneImage} alt="Scene" style={{ width: '100%', maxHeight: '240px', objectFit: 'cover', borderRadius: '12px' }} />
+        </div>
+      )}
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
         {messages.map((m, i) => (
@@ -123,7 +153,13 @@ Respond in character as one or more of the characters. Use *italics* for actions
         <div ref={bottomRef} />
       </div>
 
-      <div style={{ padding: '0.8rem', borderTop: '1px solid #2a2a35', display: 'flex', gap: '0.5rem' }}>
+      <div style={{ padding: '0.5rem 0.8rem', display: 'flex', gap: '0.5rem', borderTop: '1px solid #2a2a35' }}>
+        <button onClick={generateScene} style={{ background: '#4B176D', color: '#fff', border: 'none', borderRadius: '8px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+          Generate Scene
+        </button>
+      </div>
+
+      <div style={{ padding: '0.8rem', display: 'flex', gap: '0.5rem' }}>
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
