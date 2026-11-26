@@ -53,9 +53,9 @@ export default function Home() {
     load()
   }, [router])
 
-  // Group characters by story_title
+  // Group by story title
   const grouped = characters.reduce((acc: any, char) => {
-    const key = char.story_title || 'Other'
+    const key = char.story_title || char.name
     if (!acc[key]) acc[key] = []
     acc[key].push(char)
     return acc
@@ -97,37 +97,25 @@ export default function Home() {
 
       <div style={{ padding: '0 1rem' }}>
         <h3 style={{ fontSize: '1rem', margin: '0 0 0.8rem 0' }}>All Stories</h3>
-        {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => (
-          <div key={storyTitle} style={{ marginBottom: '1.5rem' }}>
-            <h4 style={{ color: '#A855F7', margin: '0 0 0.5rem', fontSize: '0.95rem' }}>{storyTitle}</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.8rem' }}>
-              {chars.map((char: any) => (
-                <div key={char.id} style={{ 
-                  background: 'rgba(21, 18, 25, 0.55)', 
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(168, 85, 247, 0.22)',
-                  borderRadius: '16px',
-                  overflow: 'hidden'
-                }}>
-                  <a href={`/chat/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    {char.image_url && <img src={char.image_url} alt={char.name} style={{ width: '100%', height: '190px', objectFit: 'cover' }} />}
-                    <div style={{ padding: '0.65rem 0.75rem' }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{char.name}</div>
-                      <div style={{ fontSize: '0.72rem', opacity: 0.65, marginTop: '0.2rem' }}>{char.description?.slice(0, 55)}...</div>
-                      {char.profiles?.username && (
-                        <div style={{ fontSize: '0.65rem', color: '#A855F7', marginTop: '0.3rem' }}>by {char.profiles.username}</div>
-                      )}
-                    </div>
-                  </a>
-                  <div style={{ padding: '0 0.75rem 0.6rem', display: 'flex', justifyContent: 'space-between' }}>
-                    <a href={`/character/${char.id}`} style={{ color: '#A855F7', fontSize: '0.7rem' }}>View</a>
-                    {char.creator_id === profile?.id && <a href={`/edit/${char.id}`} style={{ color: '#A855F7', fontSize: '0.7rem' }}>Edit</a>}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.8rem' }}>
+          {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => {
+            const first = chars[0]
+            return (
+              <a key={storyTitle} href={`/story/${encodeURIComponent(storyTitle)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div style={{ background: 'rgba(21, 18, 25, 0.55)', backdropFilter: 'blur(8px)', border: '1px solid rgba(168, 85, 247, 0.22)', borderRadius: '16px', overflow: 'hidden' }}>
+                  {first.image_url && <img src={first.image_url} alt="" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />}
+                  <div style={{ padding: '0.7rem' }}>
+                    <div style={{ fontWeight: 600 }}>{storyTitle}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.7, marginTop: '0.2rem' }}>{chars.length} character{chars.length > 1 ? 's' : ''}</div>
+                    {first.profiles?.username && (
+                      <div style={{ fontSize: '0.65rem', color: '#A855F7', marginTop: '0.2rem' }}>by {first.profiles.username}</div>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
+              </a>
+            )
+          })}
+        </div>
       </div>
 
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
