@@ -1,7 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useParams, useRouter } from 'next/navigation'
+import Cropper from 'react-easy-crop'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,6 +15,10 @@ export default function StoryPage() {
   const [characters, setCharacters] = useState<any[]>([])
   const [profile, setProfile] = useState<any>(null)
   const [coverUrl, setCoverUrl] = useState<string | null>(null)
+  const [imageSrc, setImageSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
   const router = useRouter()
 
   async function load() {
@@ -32,15 +37,55 @@ export default function StoryPage() {
 
   useEffect(() => { load() }, [title])
 
-  async function updateCover(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !profile) return
-    const fileName = `${Date.now()}-cover-${file.name}`
-    const { error } = await supabase.storage.from('character-images').upload(fileName, file)
+  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels)
+  }, [])
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files.length > 0) {
+      const reader = new FileReader()
+      reader.addEventListener('load', () => setImageSrc(reader.result as string))
+      reader.readAsDataURL(e.target.files[0])
+    }
+  }
+
+  async function getCroppedImg() {
+    if (!imageSrc || !croppedAreaPixels) return null
+    const image = new Image()
+    image.src = imageSrc
+    await new Promise(resolve => image.onload = resolve)
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')!
+    canvas.width = croppedAreaPixels.width
+    canvas.height = croppedAreaPixels.height
+
+    ctx.drawImage(
+      image,
+      croppedAreaPixels.x,
+      croppedAreaPixels.y,
+      croppedAreaPixels.width,
+      croppedAreaPixels.height,
+      0,
+      0,
+      croppedAreaPixels.width,
+      croppedAreaPixels.height
+    )
+
+    return new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg'))
+  }
+
+  async function saveCover() {
+    if (!profile) return
+    const blob = await getCroppedImg()
+    if (!blob) return
+    const fileName = `${Date.now()}-cover.jpg`
+    const { error } = await supabase.storage.from('character-images').upload(fileName, blob, { contentType: 'image/jpeg' })
     if (error) return
     const { data } = supabase.storage.from('character-images').getPublicUrl(fileName)
     await supabase.from('characters').update({ story_cover_url: data.publicUrl }).eq('story_title', title).eq('creator_id', profile.id)
     setCoverUrl(data.publicUrl)
+    setImageSrc(null)
   }
 
   return (
@@ -50,13 +95,34 @@ export default function StoryPage() {
         <h1 style={{ color: '#A855F7', margin: 0 }}>{title}</h1>
       </div>
 
-      {coverUrl && <img src={coverUrl} alt="Cover" style={{ width: '100%', maxHeight: '180px', objectFit: 'cover', borderRadius: '12px', marginBottom: '0.8rem' }} />}
+      {coverUrl && !imageSrc && <img src={coverUrl} alt="Cover" style={{ width: '100%', maxHeight: '180px', objectFit: 'cover', borderRadius: '12px', marginBottom: '0.8rem' }} />}
+
+      {imageSrc && (
+        <div style={{ position: 'relative', width: '100%', height: '300px', marginBottom: '1rem' }}>
+          <Cropper
+            image={imageSrc}
+            crop={crop}
+            zoom={zoom}
+            aspect={16 / 9}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={onCropComplete}
+          />
+        </div>
+      )}
 
       {profile && (
-        <label style={{ display: 'inline-block', marginBottom: '1rem', fontSize: '0.8rem', color: '#A855F7' }}>
-          Change Cover
-          <input type="file" accept="image/*" onChange={updateCover} style={{ display: 'none' }} />
-        </label>
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ color: '#A855F7', fontSize: '0.85rem', marginRight: '1rem' }}>
+            Change Cover
+            <input type="file" accept="image/*" onChange={onFileChange} style={{ display: 'none' }} />
+          </label>
+          {imageSrc && (
+            <button onClick={saveCover} style={{ background: '#9E092B', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
+              Save Crop
+            </button>
+          )}
+        </div>
       )}
 
       <a href={`/story-chat/${encodeURIComponent(title)}`} style={{ display: 'inline-block', marginBottom: '1.2rem', background: '#9E092B', color: '#fff', padding: '0.6rem 1.2rem', borderRadius: '20px', textDecoration: 'none' }}>
