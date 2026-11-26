@@ -23,10 +23,7 @@ export default function Profile() {
 
   async function load() {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      router.push('/login')
-      return
-    }
+    if (!session) return router.push('/login')
     const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
     if (prof) {
       setProfile(prof)
@@ -38,7 +35,6 @@ export default function Profile() {
     }
     const { data: chars } = await supabase.from('characters').select('*').eq('creator_id', session.user.id).order('created_at', { ascending: false })
     if (chars) setStories(chars)
-
     const { data: userReels } = await supabase.from('reels').select('*').eq('creator_id', session.user.id).order('created_at', { ascending: false })
     if (userReels) setReels(userReels)
   }
@@ -78,82 +74,64 @@ export default function Profile() {
 
   return (
     <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px' }}>
-      <div style={{
-        height: '140px',
-        background: banner ? `url(${banner}) center/cover` : 'rgba(21,18,25,0.5)',
-        position: 'relative'
-      }}>
-        <div style={{ position: 'absolute', bottom: '-36px', left: '1rem' }}>
-          <img src={avatar || 'https://via.placeholder.com/72'} alt="" style={{ width: '72px', height: '72px', borderRadius: '50%', border: `3px solid ${accent}`, objectFit: 'cover' }} />
+      <div style={{ height: '130px', background: banner ? `url(${banner}) center/cover` : 'rgba(21,18,25,0.4)', position: 'relative' }}>
+        <div style={{ position: 'absolute', bottom: '-32px', left: '1rem' }}>
+          <img src={avatar || 'https://via.placeholder.com/68'} alt="" style={{ width: '68px', height: '68px', borderRadius: '50%', border: `3px solid ${accent}`, objectFit: 'cover' }} />
         </div>
       </div>
 
-      <div style={{ padding: '2.8rem 1rem 1rem' }}>
+      <div style={{ padding: '2.6rem 1rem 1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, color: accent }}>{username || 'Your Name'}</h2>
-          <button onClick={() => setEditing(!editing)} style={{ background: accent, color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem' }}>
-            {editing ? 'Cancel' : 'Edit Profile'}
+          <button onClick={() => setEditing(!editing)} style={{ background: accent, color: '#fff', border: 'none', padding: '0.35rem 0.75rem', borderRadius: '8px', fontSize: '0.78rem' }}>
+            {editing ? 'Cancel' : 'Edit'}
           </button>
         </div>
-        <p style={{ opacity: 0.7, margin: '0.3rem 0 1rem', fontSize: '0.9rem' }}>{bio || 'No bio yet'}</p>
+        <p style={{ opacity: 0.7, margin: '0.25rem 0 1rem', fontSize: '0.88rem' }}>{bio || 'No bio yet'}</p>
 
         {editing && (
-          <div style={{ background: 'rgba(21,18,25,0.55)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '1rem', marginBottom: '1.5rem' }}>
-            <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)}
-              style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
-            <textarea placeholder="Bio" value={bio} onChange={e => setBio(e.target.value)}
-              style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '60px' }} />
-            <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Accent Color</label>
-            <input type="color" value={accent} onChange={e => setAccent(e.target.value)} style={{ width: '100%', height: '40px', margin: '0.3rem 0', border: 'none', borderRadius: '0.5rem' }} />
-            <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Profile Picture</label>
+          <div style={{ background: 'rgba(21,18,25,0.5)', borderRadius: '14px', padding: '1rem', marginBottom: '1.2rem' }}>
+            <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem' }} />
+            <textarea placeholder="Bio" value={bio} onChange={e => setBio(e.target.value)} style={{ width: '100%', padding: '0.6rem', margin: '0.3rem 0', background: 'rgba(9,9,13,0.7)', color: '#F2EDF5', border: '1px solid #333', borderRadius: '0.5rem', minHeight: '60px' }} />
+            <input type="color" value={accent} onChange={e => setAccent(e.target.value)} style={{ width: '100%', height: '36px', margin: '0.3rem 0', border: 'none' }} />
             <input type="file" accept="image/*" onChange={e => uploadImage(e, 'avatar')} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
-            <label style={{ fontSize: '0.8rem', opacity: 0.8 }}>Banner</label>
             <input type="file" accept="image/*" onChange={e => uploadImage(e, 'banner')} style={{ margin: '0.3rem 0', color: '#F2EDF5' }} />
-            <button onClick={save} style={{ width: '100%', padding: '0.7rem', background: accent, color: '#fff', border: 'none', borderRadius: '0.5rem', marginTop: '0.5rem' }}>Save Profile</button>
-            {message && <p style={{ marginTop: '0.5rem', color: accent }}>{message}</p>}
+            <button onClick={save} style={{ width: '100%', padding: '0.65rem', background: accent, color: '#fff', border: 'none', borderRadius: '0.5rem' }}>Save</button>
+            {message && <p style={{ marginTop: '0.4rem', color: accent }}>{message}</p>}
           </div>
         )}
 
-        <h3 style={{ color: accent, margin: '0 0 0.8rem' }}>My Characters ({stories.length})</h3>
-        {stories.length === 0 && <p style={{ opacity: 0.6 }}>No characters yet.</p>}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.8rem' }}>
+        <h3 style={{ color: accent, margin: '0 0 0.7rem' }}>My Characters</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.7rem' }}>
           {stories.map(s => (
             <a key={s.id} href={`/character/${s.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(168,85,247,0.2)' }}>
-                {s.image_url && <img src={s.image_url} alt="" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />}
-                <div style={{ padding: '0.6rem' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{s.name}</div>
-                  <div style={{ fontSize: '0.7rem', opacity: 0.7, marginTop: '0.2rem' }}>{s.description?.slice(0, 50)}...</div>
-                </div>
+              <div style={{ background: 'rgba(21,18,25,0.5)', borderRadius: '12px', overflow: 'hidden' }}>
+                {s.image_url && <img src={s.image_url} alt="" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />}
+                <div style={{ padding: '0.5rem', fontSize: '0.85rem' }}>{s.name}</div>
               </div>
             </a>
           ))}
         </div>
 
-        <h3 style={{ color: accent, margin: '1.5rem 0 0.8rem' }}>My Reels ({reels.length})</h3>
-        {reels.length === 0 && <p style={{ opacity: 0.6 }}>No reels yet.</p>}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.8rem' }}>
+        <h3 style={{ color: accent, margin: '1.3rem 0 0.7rem' }}>My Reels</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.7rem' }}>
           {reels.map(r => (
             <a key={r.id} href="/reels" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '14px', overflow: 'hidden' }}>
-                {r.thumbnail_url ? (
-                  <img src={r.thumbnail_url} alt="" style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '120px', background: '#151219', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>No thumbnail</div>
-                )}
-                <div style={{ padding: '0.5rem', fontSize: '0.85rem' }}>{r.title}</div>
+              <div style={{ background: 'rgba(21,18,25,0.5)', borderRadius: '12px', overflow: 'hidden' }}>
+                {r.thumbnail_url && <img src={r.thumbnail_url} alt="" style={{ width: '100%', height: '110px', objectFit: 'cover' }} />}
+                <div style={{ padding: '0.5rem', fontSize: '0.82rem' }}>{r.title}</div>
               </div>
             </a>
           ))}
         </div>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.95)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.6rem 0 0.9rem' }}>
-        <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🏠<br/>Home</a>
-        <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>✨<br/>Create</a>
-        <a href="/reels" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>🎬<br/>Reels</a>
-        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/profile" style={{ color: accent, textDecoration: 'none', fontSize: '0.7rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.96)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.55rem 0 0.8rem' }}>
+        <a href="/" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>🏠<br/>Home</a>
+        <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>✨<br/>Create</a>
+        <a href="/reels" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>🎬<br/>Reels</a>
+        <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>💬<br/>Chats</a>
+        <a href="/profile" style={{ color: accent, textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
       </div>
     </div>
   )
