@@ -126,13 +126,7 @@ Respond in character as one or more of the characters. Use *italics* for actions
   }
 
   async function generateVideo() {
-    const last = messages.filter(m => m.role === 'assistant').pop()
-    if (!last) return setError('Send a message first')
-    const prompt = encodeURIComponent(`${title}, ${last.content.slice(0, 150)}, cinematic gothic fantasy`)
-    const key = process.env.NEXT_PUBLIC_POLLINATIONS_KEY || ''
-    const url = `https://gen.pollinations.ai/video/${prompt}?model=seedance&width=512&height=768${key ? `&key=${key}` : ''}`
-    setSceneVideo(url)
-    setSceneImage(null)
+    setError('Video generation requires a free Pollinations key. Go to enter.pollinations.ai, create a key, then add NEXT_PUBLIC_POLLINATIONS_KEY in Vercel.')
   }
 
   async function rewriteLast() {
