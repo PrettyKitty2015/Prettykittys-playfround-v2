@@ -49,8 +49,16 @@ export default function Home() {
   }, {})
 
   return (
-    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px', background: '#09090D' }}>
-      <div style={{ textAlign: 'center', padding: '1.5rem 1rem 1rem' }}>
+    <div style={{ minHeight: '100vh', color: '#F2EDF5', paddingBottom: '90px', position: 'relative' }}>
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -1, opacity: 0.35 }}
+        src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/im8fw.mp4"
+      />
+      <div style={{ textAlign: 'center', padding: '1.5rem 1rem 1rem', position: 'relative', zIndex: 1 }}>
         <img src="https://apbydthwsxupxsqdumzl.supabase.co/storage/v1/object/public/character-images/IMG_0136.png" alt="NightBite" style={{ width: '100%', maxWidth: '260px' }} />
         {profile?.username && (
           <div style={{ fontSize: '0.85rem', opacity: 0.75, marginTop: '0.5rem' }}>
@@ -61,7 +69,7 @@ export default function Home() {
       </div>
 
       {recentChats.length > 0 && (
-        <div style={{ padding: '0 1rem 1.2rem' }}>
+        <div style={{ padding: '0 1rem 1.2rem', position: 'relative', zIndex: 1 }}>
           <h3 style={{ fontSize: '1rem', margin: '0 0 0.6rem', color: '#A855F7' }}>Recent Chats</h3>
           <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto' }}>
             {recentChats.map((chat: any) => (
@@ -76,7 +84,7 @@ export default function Home() {
         </div>
       )}
 
-      <div style={{ padding: '0 1rem' }}>
+      <div style={{ padding: '0 1rem', position: 'relative', zIndex: 1 }}>
         <h3 style={{ fontSize: '1rem', margin: '0 0 0.7rem' }}>All Stories</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: '0.75rem' }}>
           {Object.entries(grouped).map(([storyTitle, chars]: [string, any]) => {
@@ -84,7 +92,7 @@ export default function Home() {
             const cover = chars.find((c: any) => c.story_cover_url)?.story_cover_url || first.image_url
             return (
               <a key={storyTitle} href={`/story/${encodeURIComponent(storyTitle)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ background: 'rgba(21,18,25,0.5)', border: '1px solid rgba(168,85,247,0.18)', borderRadius: '16px', overflow: 'hidden' }}>
+                <div style={{ background: 'rgba(21,18,25,0.55)', backdropFilter: 'blur(6px)', border: '1px solid rgba(168,85,247,0.18)', borderRadius: '16px', overflow: 'hidden' }}>
                   {cover && <img src={cover} alt="" style={{ width: '100%', height: '170px', objectFit: 'cover' }} />}
                   <div style={{ padding: '0.65rem' }}>
                     <div style={{ fontWeight: 600 }}>{storyTitle}</div>
@@ -97,13 +105,9 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.96)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.55rem 0 0.8rem' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(17,17,22,0.96)', borderTop: '1px solid #2a2a35', display: 'flex', justifyContent: 'space-around', padding: '0.55rem 0 0.8rem', zIndex: 10 }}>
         <a href="/" style={{ color: '#A855F7', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>🏠<br/>Home</a>
         <a href="/create" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>✨<br/>Create</a>
         <a href="/reels" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>🎬<br/>Reels</a>
         <a href="/chats" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>💬<br/>Chats</a>
-        <a href="/profile" style={{ color: '#F2EDF5', textDecoration: 'none', fontSize: '0.68rem', textAlign: 'center' }}>⚙️<br/>Profile</a>
-      </div>
-    </div>
-  )
-}
+        <a href="/profile" style={{ color: '#F
