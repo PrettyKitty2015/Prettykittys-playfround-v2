@@ -43,13 +43,19 @@ export default function StoryPage() {
       </a>
 
       <h2 style={{ fontSize: '1.1rem', marginBottom: '0.8rem' }}>Characters</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.8rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.8rem' }}>
         {characters.map(char => (
           <a key={char.id} href={char.creator_id === profile?.id ? `/edit/${char.id}` : `/character/${char.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '12px', overflow: 'hidden' }}>
-              {char.image_url && <img src={char.image_url} alt="" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />}
-              <div style={{ padding: '0.5rem', fontSize: '0.9rem' }}>
-                {char.name}
+            <div style={{ background: 'rgba(21,18,25,0.55)', borderRadius: '14px', overflow: 'hidden' }}>
+              {char.image_url && (
+                <img
+                  src={char.image_url}
+                  alt=""
+                  style={{ width: '100%', height: '220px', objectFit: 'cover', objectPosition: 'top' }}
+                />
+              )}
+              <div style={{ padding: '0.55rem' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>{char.name}</div>
                 {char.creator_id === profile?.id && <div style={{ fontSize: '0.7rem', color: '#A855F7' }}>Edit</div>}
               </div>
             </div>
