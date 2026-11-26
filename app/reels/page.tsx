@@ -12,7 +12,6 @@ export default function Reels() {
   const [reels, setReels] = useState<any[]>([])
   const [current, setCurrent] = useState(0)
   const [userId, setUserId] = useState<string | null>(null)
-  const [seriesFilter, setSeriesFilter] = useState('')
   const router = useRouter()
 
   async function load() {
@@ -22,16 +21,15 @@ export default function Reels() {
       return
     }
     setUserId(session.user.id)
-    let query = supabase
+    const { data, error } = await supabase
       .from('reels')
-      .select('*, profiles(username)')
+      .select('*')
       .order('created_at', { ascending: false })
-    if (seriesFilter) query = query.eq('series_title', seriesFilter)
-    const { data } = await query
+    if (error) console.error(error)
     if (data) setReels(data)
   }
 
-  useEffect(() => { load() }, [seriesFilter])
+  useEffect(() => { load() }, [])
 
   async function deleteReel(id: string) {
     if (!confirm('Delete this reel?')) return
@@ -46,7 +44,7 @@ export default function Reels() {
   if (reels.length === 0) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#F2EDF5', padding: '1rem' }}>
-        <p>No reels yet{seriesFilter ? ` in ${seriesFilter}` : ''}.</p>
+        <p>No reels yet.</p>
         <a href="/create-reel" style={{ background: '#9E092B', color: '#fff', padding: '0.7rem 1.5rem', borderRadius: '20px', textDecoration: 'none', marginTop: '1rem' }}>
           Create Reel
         </a>
@@ -82,15 +80,9 @@ export default function Reels() {
       />
 
       <div style={{ position: 'absolute', bottom: '100px', left: '1rem', right: '1rem', color: '#fff', textShadow: '0 1px 4px #000' }}>
-        {reel.series_title && (
-          <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
-            {reel.series_title} • Ep {reel.episode_number}
-            <button onClick={() => setSeriesFilter(reel.series_title)} style={{ marginLeft: '0.5rem', background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '0.7rem' }}>View Series</button>
-          </div>
-        )}
+        {reel.series_title && <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>{reel.series_title} • Ep {reel.episode_number}</div>}
         <h3 style={{ margin: '0.2rem 0' }}>{reel.title}</h3>
         <p style={{ margin: '0.3rem 0', opacity: 0.9 }}>{reel.description}</p>
-        <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>by {reel.profiles?.username || 'Creator'}</div>
         {isOwner && (
           <button onClick={() => deleteReel(reel.id)} style={{ marginTop: '0.5rem', background: '#9E092B', color: '#fff', border: 'none', padding: '0.3rem 0.7rem', borderRadius: '6px', fontSize: '0.75rem' }}>
             Delete
