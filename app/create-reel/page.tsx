@@ -24,17 +24,24 @@ export default function CreateReel() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return router.push('/login')
 
-    // Upload video
+    // Upload video with correct content type
     const videoName = `${Date.now()}-${videoFile.name}`
-    const { error: videoError } = await supabase.storage.from('character-images').upload(videoName, videoFile)
+    const { error: videoError } = await supabase.storage
+      .from('character-images')
+      .upload(videoName, videoFile, {
+        contentType: videoFile.type || 'video/mp4',
+        upsert: false
+      })
     if (videoError) return setMessage(videoError.message)
     const { data: videoUrl } = supabase.storage.from('character-images').getPublicUrl(videoName)
 
-    // Upload thumbnail (optional)
+    // Upload thumbnail
     let thumbUrl = null
     if (thumbFile) {
       const thumbName = `${Date.now()}-thumb-${thumbFile.name}`
-      const { error: thumbError } = await supabase.storage.from('character-images').upload(thumbName, thumbFile)
+      const { error: thumbError } = await supabase.storage
+        .from('character-images')
+        .upload(thumbName, thumbFile, { contentType: thumbFile.type || 'image/jpeg' })
       if (!thumbError) {
         const { data } = supabase.storage.from('character-images').getPublicUrl(thumbName)
         thumbUrl = data.publicUrl
